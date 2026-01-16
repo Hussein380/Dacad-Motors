@@ -1,0 +1,264 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Star, Users, Fuel, Settings2, MapPin, Check, Shield, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Layout } from '@/components/common/Layout';
+import { LazyImage } from '@/components/common/LazyImage';
+import { Skeleton } from '@/components/common/Skeleton';
+import { BookingForm } from '@/components/booking/BookingForm';
+import { getCarById } from '@/services/carService';
+import type { Car } from '@/data/mockCars';
+
+export default function CarDetails() {
+  const { id } = useParams<{ id: string }>();
+  const [car, setCar] = useState<Car | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCar = async () => {
+      if (!id) return;
+      try {
+        const data = await getCarById(id);
+        setCar(data);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCar();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-32 mb-8" />
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Skeleton className="aspect-[4/3] rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!car) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h2 className="font-display text-2xl font-bold mb-4">Car Not Found</h2>
+          <p className="text-muted-foreground mb-6">The car you're looking for doesn't exist.</p>
+          <Button asChild>
+            <Link to="/cars">Browse All Cars</Link>
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  const fuelLabels: Record<string, string> = {
+    electric: 'Electric',
+    hybrid: 'Hybrid',
+    petrol: 'Petrol',
+    diesel: 'Diesel',
+  };
+
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-6 lg:py-8">
+        {/* Back Button */}
+        <Button variant="ghost" asChild className="mb-6 -ml-2">
+          <Link to="/cars">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Cars
+          </Link>
+        </Button>
+
+        <div className="grid lg:grid-cols-5 gap-8">
+          {/* Left Column - Car Details */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Main Image */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative rounded-2xl overflow-hidden"
+            >
+              <LazyImage
+                src={car.imageUrl}
+                alt={car.name}
+                className="w-full object-cover"
+                wrapperClassName="aspect-[16/10]"
+              />
+              
+              {/* Badges */}
+              <div className="absolute top-4 left-4 flex gap-2">
+                {car.available ? (
+                  <Badge className="bg-success text-success-foreground border-0">Available</Badge>
+                ) : (
+                  <Badge variant="secondary">Unavailable</Badge>
+                )}
+                <Badge variant="outline" className="bg-card/80 backdrop-blur-sm capitalize">
+                  {car.category}
+                </Badge>
+              </div>
+            </motion.div>
+
+            {/* Title & Rating */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h1 className="font-display text-3xl md:text-4xl font-bold">{car.name}</h1>
+                  <p className="text-muted-foreground text-lg mt-1">
+                    {car.brand} {car.model} • {car.year}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary">
+                  <Star className="w-5 h-5 fill-warning text-warning" />
+                  <span className="font-semibold">{car.rating}</span>
+                  <span className="text-muted-foreground">({car.reviewCount} reviews)</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Quick Specs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Users className="w-5 h-5 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Seats</p>
+                      <p className="font-semibold">{car.seats} People</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Settings2 className="w-5 h-5 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Transmission</p>
+                      <p className="font-semibold capitalize">{car.transmission}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <Fuel className="w-5 h-5 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Fuel</p>
+                      <p className="font-semibold">{fuelLabels[car.fuelType]}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                    <MapPin className="w-5 h-5 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Location</p>
+                      <p className="font-semibold">{car.location}</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Description */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-4"
+            >
+              <h2 className="font-display text-xl font-semibold">About This Car</h2>
+              <p className="text-muted-foreground leading-relaxed">{car.description}</p>
+            </motion.div>
+
+            {/* Features */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-4"
+            >
+              <h2 className="font-display text-xl font-semibold">Features</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {car.features.map((feature) => (
+                  <div
+                    key={feature}
+                    className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50"
+                  >
+                    <Check className="w-4 h-4 text-success flex-shrink-0" />
+                    <span className="text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Trust Badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-wrap gap-4"
+            >
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Shield className="w-4 h-4 text-success" />
+                <span>Fully insured</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4 text-success" />
+                <span>24/7 support</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Check className="w-4 h-4 text-success" />
+                <span>{car.mileage}</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Booking Form */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-2"
+          >
+            <div className="lg:sticky lg:top-24 space-y-4">
+              {/* Price Card */}
+              <Card className="p-6 text-center gradient-hero text-primary-foreground">
+                <p className="text-sm text-primary-foreground/70">Starting from</p>
+                <p className="font-display text-4xl font-bold">
+                  ${car.pricePerDay}
+                  <span className="text-lg font-normal">/day</span>
+                </p>
+              </Card>
+
+              {/* Booking Form */}
+              {car.available ? (
+                <BookingForm car={car} />
+              ) : (
+                <Card className="p-6 text-center">
+                  <h3 className="font-display font-semibold mb-2">Currently Unavailable</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    This car is not available for booking at the moment.
+                  </p>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/cars">Browse Other Cars</Link>
+                  </Button>
+                </Card>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
