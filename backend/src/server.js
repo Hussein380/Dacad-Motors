@@ -8,6 +8,9 @@ const PORT = process.env.PORT || 5000;
 // Connect to Database
 connectDB();
 
+// Start Background Workers
+require('./workers/email.worker');
+
 const server = app.listen(PORT, () => {
     logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

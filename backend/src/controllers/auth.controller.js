@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 const { sendSuccess, sendError } = require('../utils/response');
+const { addEmailJob } = require('../services/queue.service');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -18,6 +19,9 @@ exports.register = async (req, res) => {
         });
 
         const token = generateToken(user._id);
+
+        // Send welcome email (non-blocking)
+        addEmailJob('welcome', { name: user.name, email: user.email });
 
         sendSuccess(res, {
             user: {

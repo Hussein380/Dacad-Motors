@@ -23,6 +23,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.66.6",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -37,6 +38,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.12",
     "redis": "^5.10.0",
+    "resend": "^6.8.0",
     "winston": "^3.19.0"
   }
 }

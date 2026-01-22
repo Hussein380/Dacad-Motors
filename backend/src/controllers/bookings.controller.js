@@ -2,6 +2,7 @@ const Booking = require('../models/Booking');
 const BookingExtra = require('../models/BookingExtra');
 const bookingService = require('../services/booking.service');
 const { sendSuccess, sendError } = require('../utils/response');
+const { addEmailJob } = require('../services/queue.service');
 
 // @desc    Create new booking
 // @route   POST /api/bookings
@@ -48,6 +49,17 @@ exports.createBooking = async (req, res) => {
             returnLocation,
             extras,
             totalDays,
+            totalPrice
+        });
+
+        // 4. Send booking confirmation email (non-blocking)
+        addEmailJob('booking-confirmation', {
+            bookingId: booking.bookingId,
+            customerName,
+            customerEmail,
+            pickupDate,
+            returnDate,
+            pickupLocation,
             totalPrice
         });
 
