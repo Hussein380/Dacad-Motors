@@ -1,40 +1,51 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, Car, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Car, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
-export default function Login() {
+export default function Register() {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { login } = useAuth();
+    const { register } = useAuth();
     const navigate = useNavigate();
-    const location = useLocation();
-
-    const from = (location.state as any)?.from?.pathname || '/';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
         setError(null);
 
+        // Validation
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
+        setIsSubmitting(true);
+
         try {
-            const result = await login(email, password);
+            const result = await register(name, email, password);
             if (result.success) {
                 toast({
-                    title: "Welcome back!",
-                    description: "You have successfully signed in.",
+                    title: "Welcome to DriveEase!",
+                    description: "Your account has been created successfully.",
                 });
-                navigate(from, { replace: true });
+                navigate('/', { replace: true });
             } else {
-                setError(result.message || 'Invalid email or password');
+                setError(result.message || 'Registration failed. Please try again.');
             }
         } catch (err: any) {
             setError(err.message || 'Something went wrong. Please try again.');
@@ -58,10 +69,10 @@ export default function Login() {
                     <Car className="w-9 h-9 text-accent-foreground" />
                 </motion.div>
                 <h2 className="text-center text-3xl font-display font-bold text-primary-foreground">
-                    Welcome to DriveEase
+                    Create Your Account
                 </h2>
                 <p className="mt-2 text-center text-sm text-primary-foreground/70">
-                    Sign in to your account to continue
+                    Join DriveEase to track your bookings and get personalized recommendations
                 </p>
             </div>
 
@@ -72,7 +83,7 @@ export default function Login() {
                 className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
             >
                 <Card className="p-8 glass-dark border-border/50 shadow-2xl">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -83,6 +94,27 @@ export default function Login() {
                                 {error}
                             </motion.div>
                         )}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1" htmlFor="name">
+                                Full Name
+                            </label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    placeholder="John Doe"
+                                    className="pl-10 bg-secondary/50 border-border/50 focus:border-accent transition-all"
+                                    value={name}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                        if (error) setError(null);
+                                    }}
+                                    required
+                                />
+                            </div>
+                        </div>
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-muted-foreground ml-1" htmlFor="email">
@@ -96,21 +128,19 @@ export default function Login() {
                                     placeholder="name@example.com"
                                     className="pl-10 bg-secondary/50 border-border/50 focus:border-accent transition-all"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (error) setError(null);
+                                    }}
                                     required
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between ml-1">
-                                <label className="text-sm font-medium text-muted-foreground" htmlFor="password">
-                                    Password
-                                </label>
-                                <button type="button" className="text-xs text-accent hover:underline">
-                                    Forgot password?
-                                </button>
-                            </div>
+                            <label className="text-sm font-medium text-muted-foreground ml-1" htmlFor="password">
+                                Password
+                            </label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
@@ -119,7 +149,31 @@ export default function Login() {
                                     placeholder="••••••••"
                                     className="pl-10 bg-secondary/50 border-border/50 focus:border-accent transition-all"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (error) setError(null);
+                                    }}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1" htmlFor="confirmPassword">
+                                Confirm Password
+                            </label>
+                            <div className="relative">
+                                <Check className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="pl-10 bg-secondary/50 border-border/50 focus:border-accent transition-all"
+                                    value={confirmPassword}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value);
+                                        if (error) setError(null);
+                                    }}
                                     required
                                 />
                             </div>
@@ -134,7 +188,7 @@ export default function Login() {
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent-foreground"></div>
                             ) : (
                                 <>
-                                    Sign In
+                                    Create Account
                                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -147,14 +201,14 @@ export default function Login() {
                                 <div className="w-full border-t border-border/50"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-transparent text-muted-foreground">New to DriveEase?</span>
+                                <span className="px-2 bg-transparent text-muted-foreground">Already have an account?</span>
                             </div>
                         </div>
 
                         <div className="mt-6">
-                            <Link to="/register">
+                            <Link to="/login">
                                 <Button variant="outline" className="w-full border-border/50 hover:bg-accent/10 hover:text-accent transition-all">
-                                    Create an account
+                                    Sign In
                                 </Button>
                             </Link>
                         </div>

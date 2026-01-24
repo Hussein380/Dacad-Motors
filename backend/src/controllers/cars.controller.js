@@ -10,8 +10,8 @@ exports.getCars = async (req, res) => {
     try {
         const query = { ...req.query };
 
-        // Remove fields that are not filters
-        const removeFields = ['select', 'sort', 'page', 'limit', 'search'];
+        // Remove fields that are not direct filters on the Car model
+        const removeFields = ['select', 'sort', 'page', 'limit', 'search', 'featured'];
         removeFields.forEach(param => delete query[param]);
 
         // Create query string for advanced operators ($gt, $gte, etc)
@@ -84,7 +84,10 @@ exports.getCarById = async (req, res) => {
 // @access  Public
 exports.getFeaturedCars = async (req, res) => {
     try {
-        const cars = await Car.find({ rating: { $gte: 4.5 } }).limit(6);
+        const limit = parseInt(req.query.limit, 10) || 6;
+        const cars = await Car.find({ rating: { $gte: 4.5 }, available: true })
+            .sort('-rating')
+            .limit(limit);
         sendSuccess(res, cars);
     } catch (error) {
         sendError(res, error.message, 500);

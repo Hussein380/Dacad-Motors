@@ -9,6 +9,7 @@ import CarDetails from "./pages/Cars/CarDetails";
 import BookingConfirmation from "./pages/Booking/Confirmation";
 import Admin from "./pages/Admin";
 import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/cars/:id" element={<CarDetails />} />
             <Route path="/booking/confirmation" element={<BookingConfirmation />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route
               path="/admin"
               element={

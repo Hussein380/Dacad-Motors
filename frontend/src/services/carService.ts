@@ -83,9 +83,10 @@ export async function getCarById(id: string): Promise<Car | null> {
  * Get featured cars (top rated, available)
  */
 export async function getFeaturedCars(limit: number = 4): Promise<Car[]> {
-  const response = await apiRequest<any[]>(`/cars?featured=true&limit=${limit}`);
+  // Use the dedicated /featured endpoint which returns cars with rating >= 4.5
+  const response = await apiRequest<any[]>(`/cars/featured?limit=${limit}`);
   if (response.success && response.data) {
-    // Updated mapping to handle both direct array and wrapped object
+    // Handle both direct array and wrapped object responses
     const cars = Array.isArray(response.data) ? response.data :
       (response.data && typeof response.data === 'object' && 'cars' in response.data) ? (response.data as any).cars : [];
     return (cars || []).map(mapCar);

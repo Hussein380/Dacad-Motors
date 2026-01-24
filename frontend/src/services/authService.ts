@@ -27,6 +27,21 @@ export const login = async (email: string, password: string) => {
     return response;
 };
 
+export const register = async (name: string, email: string, password: string) => {
+    const response = await apiRequest<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password }),
+    });
+
+    if (response.success && response.data) {
+        // Auto-login after registration
+        localStorage.setItem('driveease_token', response.data.token);
+        localStorage.setItem('driveease_user', JSON.stringify(response.data.user));
+    }
+
+    return response;
+};
+
 export const logout = () => {
     localStorage.removeItem('driveease_token');
     localStorage.removeItem('driveease_user');
