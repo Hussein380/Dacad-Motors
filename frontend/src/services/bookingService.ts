@@ -49,11 +49,32 @@ const mapBooking = (b: any): Booking => ({
 });
 
 /**
- * Get all bookings
+ * Get all bookings (admin only)
  */
 export async function getBookings(status?: Booking['status']): Promise<BookingsResponse> {
   const query = status ? `?status=${status}` : '';
   const response = await apiRequest<any[]>(`/bookings${query}`);
+
+  if (response.success && response.data) {
+    const bookings = response.data.map(mapBooking);
+    return {
+      bookings,
+      total: bookings.length,
+    };
+  }
+
+  return {
+    bookings: [],
+    total: 0,
+  };
+}
+
+/**
+ * Get my bookings (current user)
+ */
+export async function getMyBookings(status?: Booking['status']): Promise<BookingsResponse> {
+  const query = status ? `?status=${status}` : '';
+  const response = await apiRequest<any[]>(`/bookings/my${query}`);
 
   if (response.success && response.data) {
     const bookings = response.data.map(mapBooking);

@@ -28,6 +28,28 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    // Personalization fields
+    favorites: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Car'
+    }],
+    preferredPickupLocations: [{
+        type: String
+    }],
+    preferredReturnLocations: [{
+        type: String
+    }],
+    preferredCategorySlugs: [{
+        type: String
+    }],
+    savedSearches: [{
+        name: String,
+        filters: mongoose.Schema.Types.Mixed,
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     createdAt: {
         type: Date,
         default: Date.now

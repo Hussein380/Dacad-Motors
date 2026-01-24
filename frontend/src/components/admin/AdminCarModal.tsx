@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import type { Car } from '@/types';
-import { createCar, updateCar } from '@/services/carService';
+import { createCar, updateCar, getCategories } from '@/services/carService';
 
 interface AdminCarModalProps {
     isOpen: boolean;
@@ -29,12 +29,50 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
         location: '',
         features: '',
         available: true,
+        isFeatured: false,
+        featuredRank: 0,
     });
 
+    const [categories, setCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Load categories on mount
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const cats = await getCategories();
+                // Ensure we have an array
+                if (Array.isArray(cats) && cats.length > 0) {
+                    setCategories(cats);
+                } else {
+                    // Fallback to default categories if API returns empty/invalid
+                    setCategories([
+                        { id: 'economy', name: 'Economy', icon: '🚗' },
+                        { id: 'compact', name: 'Compact', icon: '🚙' },
+                        { id: 'sedan', name: 'Sedan', icon: '🏙️' },
+                        { id: 'suv', name: 'SUV', icon: '🏔️' },
+                        { id: 'luxury', name: 'Luxury', icon: '✨' },
+                        { id: 'sports', name: 'Sports', icon: '🏎️' },
+                    ]);
+                }
+            } catch (err) {
+                console.error('Failed to load categories:', err);
+                // Fallback on error
+                setCategories([
+                    { id: 'economy', name: 'Economy', icon: '🚗' },
+                    { id: 'compact', name: 'Compact', icon: '🚙' },
+                    { id: 'sedan', name: 'Sedan', icon: '🏙️' },
+                    { id: 'suv', name: 'SUV', icon: '🏔️' },
+                    { id: 'luxury', name: 'Luxury', icon: '✨' },
+                    { id: 'sports', name: 'Sports', icon: '🏎️' },
+                ]);
+            }
+        };
+        loadCategories();
+    }, []);
 
     useEffect(() => {
         if (car) {
@@ -52,6 +90,8 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 location: car.location,
                 features: car.features.join(', '),
                 available: car.available,
+                isFeatured: (car as any).isFeatured || false,
+                featuredRank: (car as any).featuredRank || 0,
             });
             setPreviewUrl(car.imageUrl);
         } else {
@@ -60,7 +100,7 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 brand: '',
                 model: '',
                 year: new Date().getFullYear(),
-                category: 'economy',
+                category: categories[0]?.id || 'economy',
                 pricePerDay: '',
                 description: '',
                 transmission: 'automatic',
@@ -69,12 +109,14 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 location: '',
                 features: '',
                 available: true,
+                isFeatured: false,
+                featuredRank: 0,
             });
             setPreviewUrl('');
             setSelectedFile(null);
         }
         setError(null);
-    }, [car, isOpen]);
+    }, [car, isOpen, categories]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -236,20 +278,23 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                         value={formData.category}
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                     >
-                                        <option value="economy">Economy</option>
-                                        <option value="compact">Compact</option>
-                                        <option value="sedan">Sedan</option>
-                                        <option value="suv">SUV</option>
-                                        <option value="luxury">Luxury</option>
-                                        <option value="sports">Sports</option>
+                                        {Array.isArray(categories) && categories.length > 0 ? (
+                                            categories.map((cat) => (
+                                                <option key={cat.id} value={cat.id}>
+                                                    {cat.icon} {cat.name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="economy">Economy</option>
+                                        )}
                                     </select>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Price Per Day ($)</label>
+                                    <label className="text-sm font-medium">Price Per Day (KES)</label>
                                     <Input
                                         type="number"
-                                        placeholder="e.g. 50"
+                                        placeholder="e.g. 5000"
                                         value={formData.pricePerDay}
                                         onChange={(e) => setFormData({ ...formData, pricePerDay: e.target.value })}
                                         required
@@ -322,17 +367,43 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                     />
                                 </div>
 
-                                <div className="md:col-span-2 flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="available"
-                                        checked={formData.available}
-                                        onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                                        className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
-                                    />
-                                    <label htmlFor="available" className="text-sm font-medium cursor-pointer">
-                                        Available for Rent
-                                    </label>
+                                <div className="md:col-span-2 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="available"
+                                            checked={formData.available}
+                                            onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                                            className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+                                        />
+                                        <label htmlFor="available" className="text-sm font-medium cursor-pointer">
+                                            Available for Rent
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="isFeatured"
+                                            checked={formData.isFeatured}
+                                            onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                                            className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+                                        />
+                                        <label htmlFor="isFeatured" className="text-sm font-medium cursor-pointer">
+                                            Featured Car (show on homepage)
+                                        </label>
+                                    </div>
+                                    {formData.isFeatured && (
+                                        <div className="ml-6 space-y-2">
+                                            <label className="text-sm font-medium">Featured Rank (higher = appears first)</label>
+                                            <Input
+                                                type="number"
+                                                value={formData.featuredRank}
+                                                onChange={(e) => setFormData({ ...formData, featuredRank: parseInt(e.target.value) || 0 })}
+                                                placeholder="0"
+                                                min="0"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

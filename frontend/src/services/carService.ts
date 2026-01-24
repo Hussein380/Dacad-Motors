@@ -95,25 +95,40 @@ export async function getFeaturedCars(limit: number = 4): Promise<Car[]> {
 }
 
 /**
- * Get available categories
+ * Get available categories (now returns objects with icons from backend)
  */
-export async function getCategories() {
-  const response = await apiRequest<string[]>('/cars/categories');
+export async function getCategories(): Promise<{ id: string; name: string; icon: string }[]> {
+  const response = await apiRequest<any>('/cars/categories');
   if (response.success && response.data) {
-    // Map simple strings to the object structure expected by the frontend
-    const iconMap: Record<string, string> = {
-      'Economy': '🚗',
-      'Compact': '🚙',
-      'Sedan': '🏙️',
-      'SUV': '🏔️',
-      'Luxury': '✨',
-      'Sports': '🏎️'
-    };
-    return response.data.map(cat => ({
-      id: cat.toLowerCase(),
-      name: cat,
-      icon: iconMap[cat] || '🚗'
-    }));
+    // Handle both direct array and nested response (in case of cached data)
+    let cats = response.data;
+    
+    // If it's nested (cached old response format), unwrap it
+    if (cats && typeof cats === 'object' && !Array.isArray(cats) && cats.data) {
+      cats = cats.data;
+    }
+    
+    // Ensure we have an array
+    if (Array.isArray(cats)) {
+      // If it's an array of strings (old format), convert to objects
+      if (cats.length > 0 && typeof cats[0] === 'string') {
+        const iconMap: Record<string, string> = {
+          'economy': '🚗',
+          'compact': '🚙',
+          'sedan': '🏙️',
+          'suv': '🏔️',
+          'luxury': '✨',
+          'sports': '🏎️'
+        };
+        return cats.map((cat: string) => ({
+          id: cat.toLowerCase(),
+          name: cat.charAt(0).toUpperCase() + cat.slice(1),
+          icon: iconMap[cat.toLowerCase()] || '🚗'
+        }));
+      }
+      // Already in {id, name, icon} format
+      return cats;
+    }
   }
   return [];
 }

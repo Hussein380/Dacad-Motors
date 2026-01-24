@@ -45,10 +45,13 @@ client.on('connect', () => {
 const clearCarCache = async () => {
     try {
         if (!client.isOpen) return;
-        const keys = await client.keys('driveease:cars:*');
-        if (keys.length > 0) {
-            await client.del(keys);
-            console.log('Car cache cleared');
+        // Clear both old and new cache key patterns
+        const oldKeys = await client.keys('driveease:cars:*');
+        const newKeys = await client.keys('driveease:cache:*');
+        const allKeys = [...oldKeys, ...newKeys];
+        if (allKeys.length > 0) {
+            await client.del(allKeys);
+            console.log(`Cache cleared: ${allKeys.length} keys removed`);
         }
     } catch (err) {
         console.error('Error clearing car cache:', err);

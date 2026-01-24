@@ -10,6 +10,7 @@ import { LazyImage } from '@/components/common/LazyImage';
 import { Skeleton } from '@/components/common/Skeleton';
 import { BookingForm } from '@/components/booking/BookingForm';
 import { getCarById } from '@/services/carService';
+import { formatPrice } from '@/lib/currency';
 import type { Car } from '@/types';
 
 export default function CarDetails() {
@@ -236,7 +237,7 @@ export default function CarDetails() {
               <Card className="p-6 text-center gradient-hero text-primary-foreground">
                 <p className="text-sm text-primary-foreground/70">Starting from</p>
                 <p className="font-display text-4xl font-bold">
-                  ${car.pricePerDay}
+                  {formatPrice(car.pricePerDay)}
                   <span className="text-lg font-normal">/day</span>
                 </p>
               </Card>

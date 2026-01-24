@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getBookingExtras, calculateBookingPrice } from '@/services/bookingService';
 import { getLocations } from '@/services/carService';
+import { formatPrice } from '@/lib/currency';
 import { type Car } from '@/types';
 
 interface BookingFormProps {
@@ -181,7 +182,7 @@ export function BookingForm({ car }: BookingFormProps) {
                 />
                 <span className="text-sm font-medium">{extra.name}</span>
               </div>
-              <span className="text-sm text-muted-foreground">+${extra.pricePerDay}/day</span>
+              <span className="text-sm text-muted-foreground">+{formatPrice(extra.pricePerDay)}/day</span>
             </label>
           ))}
         </div>
@@ -236,19 +237,19 @@ export function BookingForm({ car }: BookingFormProps) {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>
-                  ${car.pricePerDay} × {days} days
+                  {formatPrice(car.pricePerDay)} × {days} days
                 </span>
-                <span>${pricing.subtotal}</span>
+                <span>{formatPrice(pricing.subtotal)}</span>
               </div>
               {selectedExtraItems.map((extra) => (
                 <div key={extra.id} className="flex justify-between text-muted-foreground">
                   <span>{extra.name}</span>
-                  <span>+${extra.pricePerDay * days}</span>
+                  <span>+{formatPrice(extra.pricePerDay * days)}</span>
                 </div>
               ))}
               <div className="flex justify-between font-semibold text-lg pt-2 border-t border-border">
                 <span>Total</span>
-                <span className="text-accent">${pricing.total}</span>
+                <span className="text-accent">{formatPrice(pricing.total)}</span>
               </div>
             </div>
           </Card>

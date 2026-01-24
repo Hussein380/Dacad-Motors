@@ -147,7 +147,7 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
                 <div className="flex justify-between mb-3">
                   <Label className="text-sm font-medium">Price Range</Label>
                   <span className="text-sm text-muted-foreground">
-                    ${priceRange[0]} - ${priceRange[1]}+/day
+                    KES {priceRange[0].toLocaleString()} - KES {priceRange[1].toLocaleString()}+/day
                   </span>
                 </div>
                 <Slider

@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Cars from "./pages/Cars";
 import CarDetails from "./pages/Cars/CarDetails";
 import BookingConfirmation from "./pages/Booking/Confirmation";
+import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
@@ -30,6 +31,14 @@ const App = () => (
             <Route path="/booking/confirmation" element={<BookingConfirmation />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/admin"
               element={

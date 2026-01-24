@@ -29,7 +29,7 @@ const emailTemplates = {
                 <li><strong>Return Date:</strong> ${new Date(data.returnDate).toLocaleDateString()}</li>
                 <li><strong>Pickup Location:</strong> ${data.pickupLocation}</li>
             </ul>
-            <p>Total: <strong>$${data.totalPrice}</strong></p>
+            <p>Total: <strong>KES ${data.totalPrice.toLocaleString()}</strong></p>
             <br/>
             <p>Safe travels!<br/>The DriveEase Team</p>
         `,

@@ -16,6 +16,7 @@ import {
   X,
   Clock
 } from 'lucide-react';
+import { formatPrice } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -105,7 +106,7 @@ export default function Admin() {
     },
     {
       label: 'Revenue',
-      value: `$${bookings.reduce((sum, b) => sum + b.totalPrice, 0).toLocaleString()}`,
+      value: formatPrice(bookings.reduce((sum, b) => sum + b.totalPrice, 0)),
       icon: DollarSign,
       change: '+8% from last month',
     },
@@ -263,7 +264,7 @@ export default function Admin() {
                                 {statusInfo.label}
                               </Badge>
                             </td>
-                            <td className="p-4 font-semibold">${booking.totalPrice}</td>
+                            <td className="p-4 font-semibold">{formatPrice(booking.totalPrice)}</td>
                             <td className="p-4 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -341,7 +342,7 @@ export default function Admin() {
                             <h3 className="font-display font-semibold">{car.name}</h3>
                             <p className="text-sm text-muted-foreground capitalize">{car.category}</p>
                           </div>
-                          <p className="font-bold text-accent">${car.pricePerDay}/day</p>
+                          <p className="font-bold text-accent">{formatPrice(car.pricePerDay)}/day</p>
                         </div>
                         <div className="flex gap-2 mt-4">
                           <Button

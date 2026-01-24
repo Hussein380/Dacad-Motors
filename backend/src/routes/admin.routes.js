@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
+const categoriesController = require('../controllers/categories.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
 
 // All routes here are protected and restricted to admin
@@ -13,5 +14,11 @@ router.get('/stats', adminController.getDashboardStats);
 router.post('/locations', adminController.createLocation);
 router.put('/locations/:id', adminController.updateLocation);
 router.delete('/locations/:id', adminController.deleteLocation);
+
+// Category management
+router.get('/categories', categoriesController.getAllCategories);
+router.post('/categories', categoriesController.createCategory);
+router.put('/categories/:id', categoriesController.updateCategory);
+router.delete('/categories/:id', categoriesController.deleteCategory);
 
 module.exports = router;

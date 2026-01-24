@@ -1,5 +1,4 @@
 const { client } = require('../config/redis.config');
-const { sendSuccess } = require('../utils/response');
 
 /**
  * Middleware to cache GET requests
@@ -17,19 +16,20 @@ const cache = (ttl = 3600) => {
             return next();
         }
 
-        const key = `driveease:cars:${req.originalUrl}`;
+        const key = `driveease:cache:${req.originalUrl}`;
 
         try {
             const cachedData = await client.get(key);
             if (cachedData) {
-                // console.log(`Cache hit for ${key}`);
-                return sendSuccess(res, JSON.parse(cachedData));
+                // Return cached response directly (it's already the full JSON response)
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('X-Cache', 'HIT');
+                return res.status(200).send(cachedData);
             }
 
-            // If not in cache, override res.sendSuccess (or the final response) to capture and store it
-            // Since we use sendSuccess utility, we can intercept it or just store after controller finishes
-            // A common pattern is to wrap res.send
-
+            // Cache miss - intercept the response to store it
+            res.setHeader('X-Cache', 'MISS');
+            
             const originalSend = res.send;
             res.send = function (body) {
                 res.send = originalSend;

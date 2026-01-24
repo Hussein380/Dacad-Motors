@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Layout } from '@/components/common/Layout';
 import { LazyImage } from '@/components/common/LazyImage';
+import { formatPrice } from '@/lib/currency';
 import type { Car } from '@/types';
 
 interface BookingState {
@@ -119,19 +120,19 @@ export default function BookingConfirmation() {
               <div className="border-t border-border pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    ${car.pricePerDay} × {booking.days} days
+                    {formatPrice(car.pricePerDay)} × {booking.days} days
                   </span>
-                  <span>${booking.pricing.subtotal}</span>
+                  <span>{formatPrice(booking.pricing.subtotal)}</span>
                 </div>
                 {booking.pricing.extrasTotal > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Extras</span>
-                    <span>${booking.pricing.extrasTotal}</span>
+                    <span>{formatPrice(booking.pricing.extrasTotal)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold text-lg pt-2 border-t border-border">
                   <span>Total</span>
-                  <span className="text-accent">${booking.pricing.total}</span>
+                  <span className="text-accent">{formatPrice(booking.pricing.total)}</span>
                 </div>
               </div>
             </div>

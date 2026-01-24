@@ -22,7 +22,9 @@ const carSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'Please add a category'],
-        enum: ['economy', 'compact', 'sedan', 'suv', 'luxury', 'sports']
+        lowercase: true,
+        trim: true
+        // No enum - validates against Category collection dynamically
     },
     pricePerDay: {
         type: Number,
@@ -69,6 +71,18 @@ const carSchema = new mongoose.Schema({
     reviewCount: {
         type: Number,
         default: 0
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false
+    },
+    featuredRank: {
+        type: Number,
+        default: 0
+    },
+    featuredUntil: {
+        type: Date,
+        default: null
     },
     createdAt: {
         type: Date,

@@ -79,28 +79,67 @@ exports.getCarById = async (req, res) => {
     }
 };
 
-// @desc    Get featured cars
+// @desc    Get featured cars (hybrid: admin-selected + top-rated fallback)
 // @route   GET /api/cars/featured
 // @access  Public
 exports.getFeaturedCars = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit, 10) || 6;
-        const cars = await Car.find({ rating: { $gte: 4.5 }, available: true })
-            .sort('-rating')
+        const now = new Date();
+        
+        // Step 1: Get admin-featured cars (not expired)
+        const featuredQuery = {
+            isFeatured: true,
+            available: true,
+            $or: [
+                { featuredUntil: null },
+                { featuredUntil: { $gte: now } }
+            ]
+        };
+        
+        const adminFeatured = await Car.find(featuredQuery)
+            .sort('-featuredRank -createdAt')
             .limit(limit);
+        
+        // Step 2: If we need more, fill with top-rated
+        let cars = adminFeatured;
+        if (cars.length < limit) {
+            const excludeIds = cars.map(c => c._id);
+            const topRated = await Car.find({
+                rating: { $gte: 4.5 },
+                available: true,
+                _id: { $nin: excludeIds }
+            })
+                .sort('-rating')
+                .limit(limit - cars.length);
+            
+            cars = [...cars, ...topRated];
+        }
+        
         sendSuccess(res, cars);
     } catch (error) {
         sendError(res, error.message, 500);
     }
 };
 
-// @desc    Get all unique categories
+// @desc    Get all active categories (from Category model)
 // @route   GET /api/cars/categories
 // @access  Public
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Car.distinct('category');
-        sendSuccess(res, categories);
+        const Category = require('../models/Category');
+        const categories = await Category.find({ isActive: true })
+            .select('slug name icon sortOrder')
+            .sort('sortOrder name');
+        
+        // Map to frontend format: {id, name, icon}
+        const mapped = categories.map(cat => ({
+            id: cat.slug,
+            name: cat.name,
+            icon: cat.icon
+        }));
+        
+        sendSuccess(res, mapped);
     } catch (error) {
         sendError(res, error.message, 500);
     }

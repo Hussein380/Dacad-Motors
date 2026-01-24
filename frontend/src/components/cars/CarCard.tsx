@@ -6,6 +6,7 @@ import { LazyImage } from '@/components/common/LazyImage';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/currency';
 
 interface CarCardProps {
   car: Car;
@@ -91,7 +92,7 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
             {/* Price & CTA */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50">
               <div>
-                <span className="text-2xl font-display font-bold">${car.pricePerDay}</span>
+                <span className="text-2xl font-display font-bold">{formatPrice(car.pricePerDay)}</span>
                 <span className="text-sm text-muted-foreground">/day</span>
               </div>
               <Button

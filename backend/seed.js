@@ -2,6 +2,16 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Car = require('./src/models/Car');
 const Location = require('./src/models/Location');
+const Category = require('./src/models/Category');
+
+const categories = [
+    { slug: 'economy', name: 'Economy', icon: '🚗', sortOrder: 1 },
+    { slug: 'compact', name: 'Compact', icon: '🚙', sortOrder: 2 },
+    { slug: 'sedan', name: 'Sedan', icon: '🏙️', sortOrder: 3 },
+    { slug: 'suv', name: 'SUV', icon: '🏔️', sortOrder: 4 },
+    { slug: 'luxury', name: 'Luxury', icon: '✨', sortOrder: 5 },
+    { slug: 'sports', name: 'Sports', icon: '🏎️', sortOrder: 6 }
+];
 
 const locations = [
     { name: 'Downtown', address: '123 Main St', city: 'Metropolis' },
@@ -85,13 +95,20 @@ const seedData = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected to MongoDB for seeding...');
 
+        await Category.deleteMany();
         await Location.deleteMany();
         await Car.deleteMany();
 
+        await Category.create(categories);
+        console.log('✅ Categories seeded');
+        
         await Location.create(locations);
+        console.log('✅ Locations seeded');
+        
         await Car.create(cars);
+        console.log('✅ Cars seeded');
 
-        console.log('✅ Data seeded successfully!');
+        console.log('✅ All data seeded successfully!');
         process.exit(0);
     } catch (error) {
         console.error('❌ Error seeding data:', error);
