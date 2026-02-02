@@ -60,6 +60,20 @@ app.get('/api/debug', async (req, res) => {
     }
 });
 
+// Test endpoint - returns cars directly (no cache)
+app.get('/api/test-cars', async (req, res) => {
+    const Car = require('./models/Car');
+    try {
+        const cars = await Car.find({}).limit(5);
+        sendSuccess(res, {
+            count: cars.length,
+            cars: cars.map(c => ({ id: c._id, name: c.name, brand: c.brand }))
+        });
+    } catch (err) {
+        sendError(res, err.message, 500);
+    }
+});
+
 // Handle 404
 app.use((req, res) => {
     sendError(res, 'Route not found', 404);
