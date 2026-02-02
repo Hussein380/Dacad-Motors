@@ -14,8 +14,8 @@ const commonOptions = {
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator,
-    // Skip validation for proxy headers (fixes Vercel error)
-    validate: { xForwardedForHeader: false }
+    // Skip all validation (fixes Vercel proxy errors)
+    validate: false
 };
 
 // 1. Global Limiter: 100 requests per 15 minutes for all /api routes
