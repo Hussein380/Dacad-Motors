@@ -37,6 +37,29 @@ app.get('/', (req, res) => {
     sendSuccess(res, { status: 'online', version: '1.0.0' }, 'DriveEase API is running');
 });
 
+// Debug endpoint - shows which MongoDB database is connected
+app.get('/api/debug', async (req, res) => {
+    const mongoose = require('mongoose');
+    const Car = require('./models/Car');
+    try {
+        const dbName = mongoose.connection?.db?.databaseName || 'not connected';
+        const carCount = await Car.countDocuments();
+        const mongoUri = process.env.MONGODB_URI || 'not set';
+        // Mask password in URI for safety
+        const maskedUri = mongoUri.replace(/:[^:@]+@/, ':****@');
+        sendSuccess(res, {
+            database: dbName,
+            carCount,
+            mongoUri: maskedUri,
+            redisUrl: process.env.REDIS_URL ? 'set' : 'not set',
+            nodeEnv: process.env.NODE_ENV,
+            isVercel: !!process.env.VERCEL,
+        });
+    } catch (err) {
+        sendError(res, err.message, 500);
+    }
+});
+
 // Handle 404
 app.use((req, res) => {
     sendError(res, 'Route not found', 404);
