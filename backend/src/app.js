@@ -63,14 +63,57 @@ app.get('/api/debug', async (req, res) => {
     }
 });
 
-// Test endpoint - returns cars directly (no cache)
+// Test endpoint - returns cars directly (no cache) + request debugging
 app.get('/api/test-cars', async (req, res) => {
     const Car = require('./models/Car');
     try {
         const cars = await Car.find({}).limit(5);
         sendSuccess(res, {
             count: cars.length,
-            cars: cars.map(c => ({ id: c._id, name: c.name, brand: c.brand }))
+            cars: cars.map(c => ({ id: c._id, name: c.name, brand: c.brand })),
+            debug: {
+                originalUrl: req.originalUrl,
+                url: req.url,
+                path: req.path,
+                query: req.query,
+                baseUrl: req.baseUrl
+            }
+        });
+    } catch (err) {
+        sendError(res, err.message, 500);
+    }
+});
+
+// Debug route - test cars query with full logging
+app.get('/api/debug-cars', async (req, res) => {
+    const mongoose = require('mongoose');
+    const Car = require('./models/Car');
+    const { client } = require('./config/redis.config');
+    
+    try {
+        // Same query logic as getCars controller
+        const query = { ...req.query };
+        const removeFields = ['select', 'sort', 'page', 'limit', 'search', 'featured', 'path'];
+        removeFields.forEach(param => delete query[param]);
+        
+        let queryStr = JSON.stringify(query);
+        queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+        const parsedQuery = JSON.parse(queryStr);
+        
+        const total = await Car.countDocuments(parsedQuery);
+        const cars = await Car.find(parsedQuery).limit(5);
+        
+        sendSuccess(res, {
+            total,
+            sampleCount: cars.length,
+            sample: cars.map(c => ({ id: c._id, name: c.name })),
+            debug: {
+                originalUrl: req.originalUrl,
+                rawQuery: req.query,
+                parsedQuery,
+                dbName: mongoose.connection?.db?.databaseName,
+                redisConnected: client?.isOpen || false
+            }
         });
     } catch (err) {
         sendError(res, err.message, 500);
