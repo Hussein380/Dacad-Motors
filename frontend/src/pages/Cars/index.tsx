@@ -18,12 +18,17 @@ export default function Cars() {
     return category ? { category } : {};
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const loadCars = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const result = await getCars(filters);
         setCars(result.cars);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load cars');
       } finally {
         setIsLoading(false);
       }
@@ -72,8 +77,16 @@ export default function Cars() {
             : cars.map((car, i) => <CarCard key={car.id} car={car} index={i} />)}
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+            <p className="font-medium">Could not load cars</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
+
         {/* Empty State */}
-        {!isLoading && cars.length === 0 && (
+        {!isLoading && !error && cars.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

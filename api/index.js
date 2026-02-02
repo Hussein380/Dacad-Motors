@@ -9,17 +9,39 @@ try {
     // dotenv optional (Vercel injects env at runtime)
 }
 
-const connectDB = require('../backend/src/config/database');
-const app = require('../backend/src/app');
+let connectDB;
+let app;
+
+try {
+    connectDB = require('../backend/src/config/database');
+    app = require('../backend/src/app');
+} catch (err) {
+    console.error('Failed to load backend:', err.message);
+}
 
 let dbPromise = null;
 
 module.exports = async (req, res) => {
-    if (!dbPromise) {
-        dbPromise = connectDB().catch((err) => {
-            console.error('DB connection failed:', err.message);
+    try {
+        if (!app) {
+            return res.status(500).json({
+                success: false,
+                error: 'Backend failed to load. Check Vercel function logs.',
+            });
+        }
+        if (!dbPromise) {
+            dbPromise = connectDB().catch((err) => {
+                console.error('DB connection failed:', err.message);
+                throw err;
+            });
+        }
+        await dbPromise;
+        return app(req, res);
+    } catch (err) {
+        console.error('API handler error:', err);
+        return res.status(500).json({
+            success: false,
+            error: err.message || 'Internal server error',
         });
     }
-    await dbPromise;
-    return app(req, res);
 };

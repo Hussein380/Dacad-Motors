@@ -552,7 +552,6 @@ const seedKenyaFleet = async () => {
         // Clear existing data
         console.log('🗑️  Clearing existing data...');
         await Category.deleteMany();
-        await Location.deleteMany();
         await Car.deleteMany();
 
         // Seed categories
@@ -560,12 +559,7 @@ const seedKenyaFleet = async () => {
         await Category.create(categories);
         console.log(`   ✅ ${categories.length} categories created`);
 
-        // Seed locations
-        console.log('📍 Seeding Kenyan locations...');
-        await Location.create(locations);
-        console.log(`   ✅ ${locations.length} locations created`);
-
-        // Seed cars
+        // Seed cars (locations use NAIROBI_LOCATIONS from config)
         console.log('🚗 Seeding Kenya car fleet...');
         await Car.create(cars);
         console.log(`   ✅ ${cars.length} cars created`);

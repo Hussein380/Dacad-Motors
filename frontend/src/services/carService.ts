@@ -60,6 +60,11 @@ export async function getCars(filters?: CarFilters): Promise<CarsResponse> {
     };
   }
 
+  // Surface API errors for debugging
+  if (response.error) {
+    throw new Error(response.error);
+  }
+
   return {
     cars: [],
     total: 0,
