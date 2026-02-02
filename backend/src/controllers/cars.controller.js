@@ -11,7 +11,8 @@ exports.getCars = async (req, res) => {
         const query = { ...req.query };
 
         // Remove fields that are not direct filters on the Car model
-        const removeFields = ['select', 'sort', 'page', 'limit', 'search', 'featured'];
+        // 'path' is added by Vercel rewrites, must be excluded
+        const removeFields = ['select', 'sort', 'page', 'limit', 'search', 'featured', 'path'];
         removeFields.forEach(param => delete query[param]);
 
         // Create query string for advanced operators ($gt, $gte, etc)
