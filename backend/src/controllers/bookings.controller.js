@@ -101,7 +101,7 @@ exports.createBooking = async (req, res) => {
 };
 
 // @desc    Get all bookings
-// @route   GET /api/bookings
+// @route   GET /api/bookings (admin) or GET /api/bookings/my (user)
 // @access  Private
 exports.getBookings = async (req, res) => {
     try {
@@ -109,9 +109,9 @@ exports.getBookings = async (req, res) => {
 
         // Admin sees all, user sees only theirs
         if (req.user.role === 'admin') {
-            query = Booking.find().populate('car', 'name brand model');
+            query = Booking.find().populate('car', 'name brand model imageUrl pricePerDay');
         } else {
-            query = Booking.find({ user: req.user._id }).populate('car', 'name brand model');
+            query = Booking.find({ user: req.user._id }).populate('car', 'name brand model imageUrl pricePerDay');
         }
 
         const bookings = await query.sort('-createdAt');
