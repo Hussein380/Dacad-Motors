@@ -305,7 +305,7 @@ export default function BookingDetails() {
                     {booking.status === 'pending' && 'Your booking is awaiting confirmation from our team.'}
                     {booking.status === 'confirmed' && 'Your booking has been confirmed. See you soon!'}
                     {booking.status === 'cancelled' && 'This booking has been cancelled.'}
-                    {booking.status === 'completed' && 'Thank you for choosing DriveEase!'}
+                    {booking.status === 'completed' && 'Thank you for choosing Sol Travel!'}
                   </p>
                 </div>
 

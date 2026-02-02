@@ -206,7 +206,7 @@ exports.getAIChatResponse = async (userMessage) => {
     const models = ['models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemma-3-1b-it'];
 
     const systemInstruction = `
-    You are the DriveEase AI Assistant, a helpful car rental expert. 
+    You are the Sol Travel AI Assistant, a helpful car rental expert. 
     IMPORTANT: You must only provide information that is ACCURATE based on our current database.
     
     Current Real-Time Fleet Data:

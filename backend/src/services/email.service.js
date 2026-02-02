@@ -6,17 +6,17 @@ const { Resend } = require('resend');
 const logger = require('../utils/logger');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const CONTACT_PHONE = '0725 996 394';
-const CONTACT_EMAIL = 'huznigarane@gmail.com';
+const CONTACT_PHONE = '+254 722 235 748';
+const CONTACT_EMAIL = 'soltravelgroupltd@gmail.com';
 
 const emailTemplates = {
     welcome: (data) => ({
-        subject: 'Welcome to DriveEase!',
-        html: `<h1>Welcome, ${data.name}!</h1><p>Thank you for joining DriveEase.</p><p>Questions? Contact us: ${CONTACT_PHONE} | ${CONTACT_EMAIL}</p><p>Best regards, The DriveEase Team</p>`,
+        subject: 'Welcome to Sol Travel Group!',
+        html: `<h1>Welcome, ${data.name}!</h1><p>Thank you for joining Sol Travel Group.</p><p>Questions? Contact us: ${CONTACT_PHONE} | ${CONTACT_EMAIL}</p><p>Best regards, The Sol Travel Team</p>`,
     }),
     'booking-received': (data) => ({
         subject: `We've Received Your Booking #${data.bookingId}`,
-        html: `<h1>Booking Request Received</h1><p>Hi ${data.customerName},</p><p>Thank you for your booking request.</p><p><strong>Booking ID:</strong> ${data.bookingId}</p><p><strong>Pickup:</strong> ${new Date(data.pickupDate).toLocaleDateString()} – ${new Date(data.returnDate).toLocaleDateString()}</p><p><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</p><p>Best regards, The DriveEase Team</p>`,
+        html: `<h1>Booking Request Received</h1><p>Hi ${data.customerName},</p><p>Thank you for your booking request.</p><p><strong>Booking ID:</strong> ${data.bookingId}</p><p><strong>Pickup:</strong> ${new Date(data.pickupDate).toLocaleDateString()} – ${new Date(data.returnDate).toLocaleDateString()}</p><p><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</p><p>Best regards, The Sol Travel Team</p>`,
     }),
     'admin-new-booking': (data) => ({
         subject: `New Booking #${data.bookingId} – Needs Confirmation`,
@@ -24,7 +24,7 @@ const emailTemplates = {
     }),
     'booking-confirmation': (data) => ({
         subject: `Booking Confirmed! #${data.bookingId}`,
-        html: `<h1>Booking Confirmed!</h1><p>Hi ${data.customerName},</p><p>Your booking has been confirmed.</p><p><strong>Booking ID:</strong> ${data.bookingId}</p><p><strong>Car:</strong> ${data.carName || 'N/A'}</p><p><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</p><p>Safe travels! The DriveEase Team</p>`,
+        html: `<h1>Booking Confirmed!</h1><p>Hi ${data.customerName},</p><p>Your booking has been confirmed.</p><p><strong>Booking ID:</strong> ${data.bookingId}</p><p><strong>Car:</strong> ${data.carName || 'N/A'}</p><p><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</p><p>Safe travels! The Sol Travel Team</p>`,
     }),
 };
 
@@ -46,7 +46,7 @@ const sendEmailDirectly = async (type, data) => {
     try {
         const emailContent = template(data);
         const result = await resend.emails.send({
-            from: 'DriveEase <onboarding@resend.dev>',
+            from: 'Sol Travel Group <onboarding@resend.dev>',
             to: recipient,
             subject: emailContent.subject,
             html: emailContent.html,

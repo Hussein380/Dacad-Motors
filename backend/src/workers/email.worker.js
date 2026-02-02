@@ -6,21 +6,21 @@ const { connection } = require('../config/queue.config');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Contact info for emails
-const CONTACT_PHONE = '0725 996 394';
-const CONTACT_EMAIL = 'huznigarane@gmail.com';
+const CONTACT_PHONE = '+254 722 235 748';
+const CONTACT_EMAIL = 'soltravelgroupltd@gmail.com';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // Email templates
 const emailTemplates = {
     welcome: (data) => ({
-        subject: 'Welcome to DriveEase! 🚗',
+        subject: 'Welcome to Sol Travel Group! 🚗',
         html: `
             <h1>Welcome, ${data.name}!</h1>
-            <p>Thank you for joining DriveEase. We're excited to have you on board.</p>
+            <p>Thank you for joining Sol Travel Group. We're excited to have you on board.</p>
             <p>Start exploring our premium car collection and find your perfect ride.</p>
             <br/>
             <p>Questions? Contact us:<br/>📞 ${CONTACT_PHONE}<br/>✉️ ${CONTACT_EMAIL}</p>
-            <p>Best regards,<br/>The DriveEase Team</p>
+            <p>Best regards,<br/>The Sol Travel Team</p>
         `,
     }),
     'booking-received': (data) => ({
@@ -39,7 +39,7 @@ const emailTemplates = {
             <br/>
             <p>We'll send you a confirmation email once your booking is approved.</p>
             <p>Questions? Contact us:<br/>📞 ${CONTACT_PHONE}<br/>✉️ ${CONTACT_EMAIL}</p>
-            <p>Best regards,<br/>The DriveEase Team</p>
+            <p>Best regards,<br/>The Sol Travel Team</p>
         `,
     }),
     'admin-new-booking': (data) => ({
@@ -58,7 +58,7 @@ const emailTemplates = {
                 <li><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</li>
             </ul>
             <p><strong>Log in to the admin dashboard to confirm this booking.</strong></p>
-            <p>Best regards,<br/>DriveEase System</p>
+            <p>Best regards,<br/>Sol Travel System</p>
         `,
     }),
     'booking-confirmation': (data) => ({
@@ -77,7 +77,7 @@ const emailTemplates = {
             <p>Total: <strong>KES ${data.totalPrice.toLocaleString()}</strong></p>
             <br/>
             <p>Need help? Contact us:<br/>📞 ${CONTACT_PHONE}<br/>✉️ ${CONTACT_EMAIL}</p>
-            <p>Safe travels!<br/>The DriveEase Team</p>
+            <p>Safe travels!<br/>The Sol Travel Team</p>
         `,
     }),
 };
@@ -101,7 +101,7 @@ const emailWorker = new Worker(
 
         try {
             const result = await resend.emails.send({
-                from: 'DriveEase <onboarding@resend.dev>', // Use your verified domain later
+                from: 'Sol Travel Group <onboarding@resend.dev>', // Use your verified domain later
                 to: recipient,
                 subject: emailContent.subject,
                 html: emailContent.html,

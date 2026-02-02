@@ -59,7 +59,7 @@ export function getInitialMessage(): AIMessage {
   return {
     id: '1',
     role: 'assistant',
-    content: "Hello! I'm your DriveEase assistant. How can I help you find the perfect car today?",
+    content: "Hello! I'm your Sol Travel assistant. How can I help you find the perfect car today?",
     timestamp: new Date().toISOString(),
   };
 }

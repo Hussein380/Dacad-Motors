@@ -24,10 +24,8 @@ export function Header() {
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2 font-display font-bold text-xl">
-          <div className="w-9 h-9 rounded-lg gradient-accent flex items-center justify-center">
-            <Car className="w-5 h-5 text-accent-foreground" />
-          </div>
-          <span className="hidden sm:block">DriveEase</span>
+          <img src="/logo.png" alt="Sol Travel" className="h-10 w-auto" />
+          <span className="hidden sm:block">Sol Travel</span>
         </Link>
 
         {/* Desktop Navigation */}

@@ -9,10 +9,8 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
-              <div className="w-9 h-9 rounded-lg gradient-accent flex items-center justify-center">
-                <Car className="w-5 h-5" />
-              </div>
-              <span>DriveEase</span>
+              <img src="/logo.png" alt="Sol Travel Group" className="h-10 w-auto" />
+              <span>Sol Travel</span>
             </Link>
             <p className="text-sm text-primary-foreground/70">
               Premium car rental experience with the best vehicles and exceptional service.
@@ -65,18 +63,18 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <Phone className="w-4 h-4" />
-                <a href="tel:+254725996394" className="hover:text-primary-foreground transition-colors">0725 996 394</a>
+                <a href="tel:+254722235748" className="hover:text-primary-foreground transition-colors">+254 722 235 748</a>
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <Mail className="w-4 h-4" />
-                <a href="mailto:huznigarane@gmail.com" className="hover:text-primary-foreground transition-colors">huznigarane@gmail.com</a>
+                <a href="mailto:soltravelgroupltd@gmail.com" className="hover:text-primary-foreground transition-colors">soltravelgroupltd@gmail.com</a>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
-          © {new Date().getFullYear()} DriveEase. All rights reserved.
+          © {new Date().getFullYear()} Sol Travel Group. All rights reserved.
         </div>
       </div>
     </footer>

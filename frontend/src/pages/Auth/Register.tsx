@@ -46,7 +46,7 @@ export default function Register() {
             const result = await register(name, email, password);
             if (result.success) {
                 toast({
-                    title: "Welcome to DriveEase!",
+                    title: "Welcome to Sol Travel!",
                     description: "Your account has been created successfully.",
                 });
                 navigate('/', { replace: true });
@@ -78,7 +78,7 @@ export default function Register() {
                     Create Your Account
                 </h2>
                 <p className="mt-2 text-center text-sm text-primary-foreground/70">
-                    Join DriveEase to track your bookings and get personalized recommendations
+                    Join Sol Travel to track your bookings and get personalized recommendations
                 </p>
             </div>
 
