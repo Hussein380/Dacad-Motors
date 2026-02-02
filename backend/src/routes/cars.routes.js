@@ -18,12 +18,13 @@ const cache = require('../middleware/cache.middleware');
 
 const router = express.Router();
 
-// Public routes (cache temporarily disabled for debugging)
-router.get('/', getCars);
-router.get('/featured', getFeaturedCars);
-router.get('/categories', getCategories);
-router.get('/locations', getLocations);
-router.get('/:id', getCarById);
+// Public routes with Redis caching
+// TTL values: how long cached data stays valid before refresh
+router.get('/', cache(300), getCars);              // 5 mins - car list may change
+router.get('/featured', cache(3600), getFeaturedCars);  // 1 hour - featured is stable
+router.get('/categories', cache(86400), getCategories); // 1 day - rarely changes
+router.get('/locations', cache(86400), getLocations);   // 1 day - fixed locations
+router.get('/:id', getCarById);  // No cache - individual car needs fresh data for booking
 
 // Admin routes
 router.post('/', protect, restrictTo('admin'), uploadCarImage, validate(carCreateSchema), createCar);
