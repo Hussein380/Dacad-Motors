@@ -8,7 +8,7 @@ const {
     getBookingExtras
 } = require('../controllers/bookings.controller');
 
-const { protect, restrictTo } = require('../middleware/auth.middleware');
+const { protect, restrictTo, optionalAuth } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
 const { bookingCreateSchema, bookingStatusSchema } = require('../utils/schemas/booking.schema');
 
@@ -18,9 +18,10 @@ const router = express.Router();
 router.get('/extras', getBookingExtras);
 
 // Combined routes for '/'
+// POST uses optionalAuth so logged-in users get their booking linked to their account
 router.route('/')
     .get(protect, restrictTo('admin'), getBookings)
-    .post(validate(bookingCreateSchema), createBooking);
+    .post(optionalAuth, validate(bookingCreateSchema), createBooking);
 
 // Protected routes (User or Admin)
 router.get('/my', protect, getBookings);
