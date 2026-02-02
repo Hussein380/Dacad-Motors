@@ -30,7 +30,8 @@ const bookingSchema = new mongoose.Schema({
     },
     customerPhone: {
         type: String,
-        required: [true, 'Please add a customer phone number']
+        required: false,
+        default: ''
     },
     pickupDate: {
         type: Date,

@@ -10,14 +10,14 @@ const bookingCreateSchema = Joi.object({
     customerEmail: Joi.string().email().required().messages({
         'string.email': 'Valid customer email is required'
     }),
-    customerPhone: Joi.string().required().messages({
-        'string.empty': 'Customer phone number is required'
+    customerPhone: Joi.string().allow('').optional().messages({
+        'string.base': 'Customer phone must be a string'
     }),
-    pickupDate: Joi.date().iso().required().messages({
-        'date.base': 'Valid pickup date is required'
+    pickupDate: Joi.string().required().messages({
+        'string.empty': 'Pickup date is required'
     }),
-    returnDate: Joi.date().iso().min(Joi.ref('pickupDate')).required().messages({
-        'date.min': 'Return date must be after pickup date'
+    returnDate: Joi.string().required().messages({
+        'string.empty': 'Return date is required'
     }),
     pickupLocation: Joi.string().required(),
     returnLocation: Joi.string().required(),

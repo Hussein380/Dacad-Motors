@@ -114,7 +114,8 @@ export async function createBooking(data: CreateBookingData): Promise<Booking | 
     return mapBooking(response.data);
   }
 
-  return null;
+  // Throw error with actual API error message
+  throw new Error(response.error || 'Failed to create booking');
 }
 
 /**

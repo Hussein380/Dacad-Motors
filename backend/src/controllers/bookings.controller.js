@@ -219,11 +219,11 @@ exports.getBookingExtras = async (req, res) => {
 };
 
 // @desc    Get unavailable/booked dates for a specific car
-// @route   GET /api/cars/:carId/unavailable-dates
+// @route   GET /api/cars/:id/unavailable-dates
 // @access  Public
 exports.getUnavailableDates = async (req, res) => {
     try {
-        const { carId } = req.params;
+        const { id: carId } = req.params;
         
         // Get all active bookings for this car (pending, confirmed, active)
         const bookings = await Booking.find({
