@@ -10,11 +10,6 @@ router.use(restrictTo('admin'));
 
 router.get('/stats', adminController.getDashboardStats);
 
-// Location management
-router.post('/locations', adminController.createLocation);
-router.put('/locations/:id', adminController.updateLocation);
-router.delete('/locations/:id', adminController.deleteLocation);
-
 // Category management
 router.get('/categories', categoriesController.getAllCategories);
 router.post('/categories', categoriesController.createCategory);

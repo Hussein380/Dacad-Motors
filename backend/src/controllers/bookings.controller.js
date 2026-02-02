@@ -1,8 +1,11 @@
 const Booking = require('../models/Booking');
 const BookingExtra = require('../models/BookingExtra');
+const Car = require('../models/Car');
 const bookingService = require('../services/booking.service');
 const { sendSuccess, sendError } = require('../utils/response');
 const { addEmailJob } = require('../services/queue.service');
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // @desc    Create new booking
 // @route   POST /api/bookings
@@ -52,8 +55,8 @@ exports.createBooking = async (req, res) => {
             totalPrice
         });
 
-        // 4. Send booking confirmation email (non-blocking)
-        addEmailJob('booking-confirmation', {
+        // 4. Send "received" email to client (non-blocking)
+        addEmailJob('booking-received', {
             bookingId: booking.bookingId,
             customerName,
             customerEmail,
@@ -62,6 +65,23 @@ exports.createBooking = async (req, res) => {
             pickupLocation,
             totalPrice
         });
+
+        // 5. Send "new booking" email to admin (non-blocking)
+        if (ADMIN_EMAIL) {
+            const car = await Car.findById(carId).select('name').lean();
+            addEmailJob('admin-new-booking', {
+                to: ADMIN_EMAIL,
+                bookingId: booking.bookingId,
+                customerName,
+                customerEmail,
+                customerPhone,
+                carName: car?.name || 'N/A',
+                pickupDate,
+                returnDate,
+                pickupLocation,
+                totalPrice
+            });
+        }
 
         sendSuccess(res, booking, 'Booking created successfully', 201);
     } catch (error) {
@@ -123,10 +143,24 @@ exports.updateBookingStatus = async (req, res) => {
             req.params.id,
             { status },
             { new: true, runValidators: true }
-        );
+        ).populate('car', 'name');
 
         if (!booking) {
             return sendError(res, 'Booking not found', 404);
+        }
+
+        // When admin confirms, send "Booking Confirmed!" email to client
+        if (status === 'confirmed') {
+            addEmailJob('booking-confirmation', {
+                bookingId: booking.bookingId,
+                customerName: booking.customerName,
+                customerEmail: booking.customerEmail,
+                carName: booking.car?.name || 'N/A',
+                pickupDate: booking.pickupDate,
+                returnDate: booking.returnDate,
+                pickupLocation: booking.pickupLocation,
+                totalPrice: booking.totalPrice
+            });
         }
 
         sendSuccess(res, booking, `Booking status updated to ${status}`);

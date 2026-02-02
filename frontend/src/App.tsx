@@ -14,6 +14,7 @@ import Register from "./pages/Auth/Register";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { ClientOnlyRoute } from "./components/auth/ClientOnlyRoute";
 
 const queryClient = new QueryClient();
 
@@ -25,17 +26,19 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/cars" element={<Cars />} />
-            <Route path="/cars/:id" element={<CarDetails />} />
-            <Route path="/booking/confirmation" element={<BookingConfirmation />} />
+            <Route path="/" element={<ClientOnlyRoute><Home /></ClientOnlyRoute>} />
+            <Route path="/cars" element={<ClientOnlyRoute><Cars /></ClientOnlyRoute>} />
+            <Route path="/cars/:id" element={<ClientOnlyRoute><CarDetails /></ClientOnlyRoute>} />
+            <Route path="/booking/confirmation" element={<ClientOnlyRoute><BookingConfirmation /></ClientOnlyRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <ClientOnlyRoute>
+                    <Dashboard />
+                  </ClientOnlyRoute>
                 </ProtectedRoute>
               }
             />

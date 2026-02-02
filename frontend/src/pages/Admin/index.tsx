@@ -32,7 +32,7 @@ import { Layout } from '@/components/common/Layout';
 import { LazyImage } from '@/components/common/LazyImage';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getCars, deleteCar } from '@/services/carService';
-import { getBookings } from '@/services/bookingService';
+import { getBookings, updateBookingStatus, cancelBooking } from '@/services/bookingService';
 import { AdminCarModal } from '@/components/admin/AdminCarModal';
 import type { Car as CarType, Booking } from '@/types';
 
@@ -85,6 +85,22 @@ export default function Admin() {
   const handleDeleteCar = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this car?')) {
       const success = await deleteCar(id);
+      if (success) {
+        loadData();
+      }
+    }
+  };
+
+  const handleConfirmBooking = async (id: string) => {
+    const updated = await updateBookingStatus(id, 'confirmed');
+    if (updated) {
+      loadData();
+    }
+  };
+
+  const handleCancelBooking = async (id: string) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+      const success = await cancelBooking(id);
       if (success) {
         loadData();
       }
@@ -277,11 +293,13 @@ export default function Admin() {
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive">
+                                  {booking.status === 'pending' && (
+                                    <DropdownMenuItem onClick={() => handleConfirmBooking(booking.id)}>
+                                      <Check className="w-4 h-4 mr-2" />
+                                      Confirm Booking
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem className="text-destructive" onClick={() => handleCancelBooking(booking.id)}>
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Cancel
                                   </DropdownMenuItem>

@@ -1,5 +1,5 @@
 const Car = require('../models/Car');
-const Location = require('../models/Location');
+const { NAIROBI_LOCATIONS } = require('../config/locations.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
@@ -28,9 +28,8 @@ exports.getRecommendations = async (criteria = {}) => {
  */
 const getFleetContext = async () => {
     try {
-        const [categories, locations, priceStats, sampleCars] = await Promise.all([
+        const [categories, priceStats, sampleCars] = await Promise.all([
             Car.distinct('category'),
-            Location.find({ isActive: true }).select('name'),
             Car.aggregate([
                 { $match: { available: true } },
                 { $group: { _id: null, minPrice: { $min: '$pricePerDay' }, maxPrice: { $max: '$pricePerDay' } } }
@@ -38,14 +37,14 @@ const getFleetContext = async () => {
             Car.find({ available: true }).select('name brand model category pricePerDay year').limit(10)
         ]);
 
-        const locationNames = locations.length > 0 ? locations.map(l => l.name) : ['Downtown', 'Airport', 'Suburb'];
+        const locationNames = NAIROBI_LOCATIONS.join(', ');
         const minPrice = priceStats[0] ? priceStats[0].minPrice : 45;
 
         const carSummary = sampleCars.map(c => `${c.brand} ${c.model} (${c.category}, $${c.pricePerDay}/day)`).join(', ');
 
         return {
             categories: categories.join(', '),
-            locations: locationNames.join(', '),
+            locations: locationNames,
             priceRange: `$${minPrice} - $${priceStats[0]?.maxPrice || 'any'}`,
             availableCars: carSummary
         };

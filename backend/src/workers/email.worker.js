@@ -8,6 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // Contact info for emails
 const CONTACT_PHONE = '0725 996 394';
 const CONTACT_EMAIL = 'huznigarane@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 // Email templates
 const emailTemplates = {
@@ -22,14 +23,53 @@ const emailTemplates = {
             <p>Best regards,<br/>The DriveEase Team</p>
         `,
     }),
+    'booking-received': (data) => ({
+        subject: `We've Received Your Booking #${data.bookingId}`,
+        html: `
+            <h1>Booking Request Received</h1>
+            <p>Hi ${data.customerName},</p>
+            <p>Thank you for your booking request. We've received it and will confirm shortly.</p>
+            <p><strong>Booking ID:</strong> ${data.bookingId}</p>
+            <ul>
+                <li><strong>Pickup Date:</strong> ${new Date(data.pickupDate).toLocaleDateString()}</li>
+                <li><strong>Return Date:</strong> ${new Date(data.returnDate).toLocaleDateString()}</li>
+                <li><strong>Pickup Location:</strong> ${data.pickupLocation}</li>
+            </ul>
+            <p>Total: <strong>KES ${data.totalPrice.toLocaleString()}</strong></p>
+            <br/>
+            <p>We'll send you a confirmation email once your booking is approved.</p>
+            <p>Questions? Contact us:<br/>📞 ${CONTACT_PHONE}<br/>✉️ ${CONTACT_EMAIL}</p>
+            <p>Best regards,<br/>The DriveEase Team</p>
+        `,
+    }),
+    'admin-new-booking': (data) => ({
+        subject: `New Booking #${data.bookingId} – Needs Confirmation`,
+        html: `
+            <h1>New Booking Request</h1>
+            <p>A customer has submitted a booking that needs your confirmation.</p>
+            <ul>
+                <li><strong>Booking ID:</strong> ${data.bookingId}</li>
+                <li><strong>Customer:</strong> ${data.customerName}</li>
+                <li><strong>Email:</strong> ${data.customerEmail}</li>
+                <li><strong>Phone:</strong> ${data.customerPhone}</li>
+                <li><strong>Car:</strong> ${data.carName || 'N/A'}</li>
+                <li><strong>Pickup:</strong> ${new Date(data.pickupDate).toLocaleDateString()} – ${new Date(data.returnDate).toLocaleDateString()}</li>
+                <li><strong>Location:</strong> ${data.pickupLocation}</li>
+                <li><strong>Total:</strong> KES ${data.totalPrice.toLocaleString()}</li>
+            </ul>
+            <p><strong>Log in to the admin dashboard to confirm this booking.</strong></p>
+            <p>Best regards,<br/>DriveEase System</p>
+        `,
+    }),
     'booking-confirmation': (data) => ({
         subject: `Booking Confirmed! #${data.bookingId}`,
         html: `
             <h1>Booking Confirmed!</h1>
             <p>Hi ${data.customerName},</p>
-            <p>Your booking has been confirmed. Here are the details:</p>
+            <p>Great news! Your booking has been confirmed. Here are the details:</p>
             <ul>
                 <li><strong>Booking ID:</strong> ${data.bookingId}</li>
+                <li><strong>Car:</strong> ${data.carName || 'N/A'}</li>
                 <li><strong>Pickup Date:</strong> ${new Date(data.pickupDate).toLocaleDateString()}</li>
                 <li><strong>Return Date:</strong> ${new Date(data.returnDate).toLocaleDateString()}</li>
                 <li><strong>Pickup Location:</strong> ${data.pickupLocation}</li>
@@ -47,7 +87,7 @@ const emailWorker = new Worker(
     'email',
     async (job) => {
         const { type, data } = job.data;
-        logger.info(`Processing email job: ${type} for ${data.email || data.customerEmail}`);
+        logger.info(`Processing email job: ${type} for ${data.to || data.email || data.customerEmail}`);
 
         const template = emailTemplates[type];
         if (!template) {
@@ -56,10 +96,13 @@ const emailWorker = new Worker(
 
         const emailContent = template(data);
 
+        // Use data.to for admin emails, otherwise customer email
+        const recipient = data.to || data.email || data.customerEmail;
+
         try {
             const result = await resend.emails.send({
                 from: 'DriveEase <onboarding@resend.dev>', // Use your verified domain later
-                to: data.email || data.customerEmail,
+                to: recipient,
                 subject: emailContent.subject,
                 html: emailContent.html,
             });

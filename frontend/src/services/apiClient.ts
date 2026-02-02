@@ -1,10 +1,13 @@
 /**
  * API Client Configuration
- * 
- * This file contains the API client setup.
+ *
+ * - Dev: localhost:5000/api
+ * - Vercel (full-stack): /api (same origin, set VITE_API_URL=/api or leave unset)
+ * - Separate backend: set VITE_API_URL to your backend URL (e.g. https://api.example.com/api)
  */
-
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 export interface ApiResponse<T> {
   data: T;

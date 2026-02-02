@@ -141,7 +141,8 @@ export default function BookingConfirmation() {
           {/* Confirmation Message */}
           <Card className="p-4 bg-success/10 border-success/20 mb-6">
             <p className="text-sm text-center">
-              A confirmation email has been sent to <strong>{booking.customerEmail}</strong>
+              We&apos;ve sent a &quot;Booking Received&quot; email to <strong>{booking.customerEmail}</strong>.
+              You&apos;ll get a confirmation email once we approve your booking.
             </p>
           </Card>
 

@@ -16,6 +16,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Backend dev scripts (tests, local runners - do not push)
+backend/tests/
+backend/scripts/test-*.js
+
 # Project documentation (requested exclusion)
 docs/
 

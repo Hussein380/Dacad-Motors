@@ -1,22 +1,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Car = require('./src/models/Car');
-const Location = require('./src/models/Location');
 const Category = require('./src/models/Category');
-
-// Kenyan locations (major cities and popular pickup points)
-const locations = [
-    { name: 'JKIA Airport', address: 'Jomo Kenyatta International Airport', city: 'Nairobi', isActive: true },
-    { name: 'Nairobi CBD', address: 'Kenyatta Avenue', city: 'Nairobi', isActive: true },
-    { name: 'Westlands', address: 'Waiyaki Way', city: 'Nairobi', isActive: true },
-    { name: 'Wilson Airport', address: 'Wilson Airport', city: 'Nairobi', isActive: true },
-    { name: 'Mombasa CBD', address: 'Moi Avenue', city: 'Mombasa', isActive: true },
-    { name: 'Moi Airport', address: 'Moi International Airport', city: 'Mombasa', isActive: true },
-    { name: 'Kisumu CBD', address: 'Oginga Odinga Street', city: 'Kisumu', isActive: true },
-    { name: 'Nakuru CBD', address: 'Kenyatta Avenue', city: 'Nakuru', isActive: true },
-    { name: 'Eldoret CBD', address: 'Uganda Road', city: 'Eldoret', isActive: true },
-    { name: 'Malindi', address: 'Lamu Road', city: 'Malindi', isActive: true },
-];
+const { NAIROBI_LOCATIONS } = require('./src/config/locations.config');
 
 // Categories with Kenyan context
 const categories = [
@@ -118,7 +104,7 @@ const cars = [
         transmission: 'automatic',
         fuelType: 'petrol',
         features: ['AC', 'Cruise Control', 'Parking Sensors', 'Bluetooth'],
-        location: 'Mombasa CBD',
+        location: 'Karen',
         description: 'Reliable Toyota quality. Ideal for coastal drives and city exploration.',
         available: true,
         rating: 4.4,
@@ -234,7 +220,7 @@ const cars = [
         transmission: 'automatic',
         fuelType: 'petrol',
         features: ['7 Seats', 'AWD', 'Around View Monitor', 'ProPILOT'],
-        location: 'Kisumu CBD',
+        location: 'Gigiri',
         description: '7-seater family SUV. Perfect for group travel around Lake Victoria.',
         available: true,
         rating: 4.5,
@@ -270,7 +256,7 @@ const cars = [
         transmission: 'automatic',
         fuelType: 'hybrid',
         features: ['Hybrid', 'Magic Seats', 'Honda Sensing', 'Wireless Charging'],
-        location: 'Mombasa CBD',
+        location: 'Karen',
         description: 'Compact SUV with hybrid efficiency. Great for coastal adventures.',
         available: true,
         rating: 4.5,
@@ -532,7 +518,7 @@ const cars = [
         transmission: 'automatic',
         fuelType: 'diesel',
         features: ['Bi-Turbo Engine', 'SYNC 4', 'Roller Shutter', 'Sport Bar'],
-        location: 'Eldoret CBD',
+        location: 'Kilimani',
         description: 'Tough and capable. Perfect for work and weekend adventures.',
         available: true,
         rating: 4.7,
@@ -550,7 +536,7 @@ const cars = [
         transmission: 'automatic',
         fuelType: 'diesel',
         features: ['4x4', 'Hill Descent Control', 'Bi-LED Headlights', 'Leather Seats'],
-        location: 'Moi Airport',
+        location: 'JKIA Airport',
         description: 'Built for African roads. Reliable and fuel efficient.',
         available: true,
         rating: 4.5,
@@ -597,7 +583,7 @@ const seedKenyaFleet = async () => {
         console.log('─'.repeat(40));
         console.log(`   TOTAL      : ${cars.length} cars`);
         console.log(`   FEATURED   : ${cars.filter(c => c.isFeatured).length} cars`);
-        console.log(`   LOCATIONS  : ${locations.length} pickup points`);
+        console.log(`   LOCATIONS  : ${NAIROBI_LOCATIONS.length} Nairobi pickup points`);
 
         console.log('\n✅ Kenya fleet seeded successfully!');
         console.log('🌐 Visit http://localhost:8080 to see the fleet');

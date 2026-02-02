@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Car, AlertCircle, ArrowRight, Check } from 'lucide-react';
@@ -16,8 +16,14 @@ export default function Register() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { register } = useAuth();
+    const { register, isAdmin, loading } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!loading && isAdmin) {
+            navigate('/admin', { replace: true });
+        }
+    }, [loading, isAdmin, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

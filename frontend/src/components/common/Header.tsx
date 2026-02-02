@@ -6,22 +6,24 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/cars', label: 'Browse Cars' },
-  { href: '/admin', label: 'Admin' },
-];
+const adminNavLinks = [{ href: '/admin', label: 'Admin Dashboard' }];
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const clientNavLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/cars', label: 'Browse Cars' },
+    ...(isAuthenticated ? [{ href: '/dashboard', label: 'My Dashboard' }] : []),
+  ];
+  const navLinks = isAdmin ? adminNavLinks : clientNavLinks;
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/50">
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
+        <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2 font-display font-bold text-xl">
           <div className="w-9 h-9 rounded-lg gradient-accent flex items-center justify-center">
             <Car className="w-5 h-5 text-accent-foreground" />
           </div>
@@ -64,8 +66,8 @@ export function Header() {
                   Sign In
                 </Link>
               </Button>
-              <Button size="sm" className="gradient-accent text-accent-foreground border-0 shadow-accent">
-                Book Now
+              <Button size="sm" className="gradient-accent text-accent-foreground border-0 shadow-accent" asChild>
+                <Link to="/cars">Book Now</Link>
               </Button>
             </>
           )}
@@ -120,8 +122,8 @@ export function Header() {
                     <Button variant="outline" className="w-full" size="sm" asChild onClick={() => setIsMenuOpen(false)}>
                       <Link to="/login">Sign In</Link>
                     </Button>
-                    <Button className="w-full gradient-accent text-accent-foreground border-0" size="sm">
-                      Book Now
+                    <Button className="w-full gradient-accent text-accent-foreground border-0" size="sm" asChild>
+                      <Link to="/cars" onClick={() => setIsMenuOpen(false)}>Book Now</Link>
                     </Button>
                   </>
                 )}

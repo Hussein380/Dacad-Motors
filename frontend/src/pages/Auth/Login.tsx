@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, Car, AlertCircle, ArrowRight } from 'lucide-react';
@@ -14,11 +14,18 @@ export default function Login() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { login } = useAuth();
+    const { login, isAdmin, loading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     const from = (location.state as any)?.from?.pathname || '/';
+
+    // Redirect admin to dashboard if already logged in
+    useEffect(() => {
+        if (!loading && isAdmin) {
+            navigate('/admin', { replace: true });
+        }
+    }, [loading, isAdmin, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,7 +39,9 @@ export default function Login() {
                     title: "Welcome back!",
                     description: "You have successfully signed in.",
                 });
-                navigate(from, { replace: true });
+                // Admin goes to admin dashboard only; client goes to intended page or home
+                const isAdmin = result.data?.user?.role === 'admin';
+                navigate(isAdmin ? '/admin' : from, { replace: true });
             } else {
                 setError(result.message || 'Invalid email or password');
             }

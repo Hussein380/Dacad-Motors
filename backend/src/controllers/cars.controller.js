@@ -1,6 +1,6 @@
 const Car = require('../models/Car');
-const Location = require('../models/Location');
 const { sendSuccess, sendError } = require('../utils/response');
+const { NAIROBI_LOCATIONS } = require('../config/locations.config');
 const { clearCarCache } = require('../config/redis.config');
 
 // @desc    Get all cars with filters/search
@@ -145,15 +145,12 @@ exports.getCategories = async (req, res) => {
     }
 };
 
-// @desc    Get all locations
+// @desc    Get pickup/return locations (Nairobi only)
 // @route   GET /api/cars/locations
 // @access  Public
 exports.getLocations = async (req, res) => {
     try {
-        const locations = await Location.find({ isActive: true }).select('name');
-        const locationNames = locations.map(loc => loc.name);
-
-        sendSuccess(res, locationNames);
+        sendSuccess(res, NAIROBI_LOCATIONS);
     } catch (error) {
         sendError(res, error.message, 500);
     }
