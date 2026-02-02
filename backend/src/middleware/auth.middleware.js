@@ -44,3 +44,31 @@ exports.restrictTo = (...roles) => {
         next();
     };
 };
+
+// Optional auth - sets req.user if token provided, but doesn't block if not
+// Useful for routes that work for both guests and logged-in users (e.g., recommendations)
+exports.optionalAuth = async (req, res, next) => {
+    let token;
+
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+    ) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    // No token - continue as guest (req.user will be undefined)
+    if (!token) {
+        return next();
+    }
+
+    try {
+        // Verify token and set user
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id);
+        next();
+    } catch (error) {
+        // Invalid token - continue as guest (don't block)
+        next();
+    }
+};

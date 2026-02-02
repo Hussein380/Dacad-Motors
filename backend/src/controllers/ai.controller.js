@@ -1,16 +1,17 @@
 const recommendationService = require('../services/recommendation.service');
 const { sendSuccess, sendError } = require('../utils/response');
 
-// @desc    Get car recommendations
-// @route   GET /api/recommendations
-// @access  Public
+// @desc    Get car recommendations (personalized for logged-in users, diverse for guests)
+// @route   GET /api/ai/recommendations
+// @access  Public (but personalized if authenticated)
 exports.getRecommendations = async (req, res) => {
     try {
-        const { category, priceMax, limit } = req.query;
+        const { limit } = req.query;
+        
+        // req.user is set by optional auth middleware if user is logged in
         const recommendations = await recommendationService.getRecommendations({
-            category,
-            priceMax: priceMax ? parseFloat(priceMax) : undefined,
-            limit: limit ? parseInt(limit) : undefined
+            user: req.user || null,
+            limit: limit ? parseInt(limit) : 4
         });
 
         sendSuccess(res, recommendations);
