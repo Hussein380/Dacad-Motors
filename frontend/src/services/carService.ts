@@ -199,3 +199,48 @@ export async function deleteCar(id: string): Promise<boolean> {
   });
   return response.success;
 }
+
+/**
+ * Get unavailable/booked dates for a specific car
+ */
+export interface UnavailableDateRange {
+  start: string;
+  end: string;
+  status: 'pending' | 'confirmed' | 'active';
+}
+
+export async function getUnavailableDates(carId: string): Promise<UnavailableDateRange[]> {
+  const response = await apiRequest<UnavailableDateRange[]>(`/cars/${carId}/unavailable-dates`);
+  if (response.success && response.data) {
+    return response.data;
+  }
+  return [];
+}
+
+/**
+ * Check if selected dates overlap with unavailable dates
+ */
+export function checkDateAvailability(
+  pickupDate: string,
+  returnDate: string,
+  unavailableDates: UnavailableDateRange[]
+): { available: boolean; conflictingBooking?: UnavailableDateRange } {
+  if (!pickupDate || !returnDate || unavailableDates.length === 0) {
+    return { available: true };
+  }
+
+  const pickup = new Date(pickupDate);
+  const returnD = new Date(returnDate);
+
+  for (const booking of unavailableDates) {
+    const bookedStart = new Date(booking.start);
+    const bookedEnd = new Date(booking.end);
+
+    // Check for overlap
+    if (pickup <= bookedEnd && returnD >= bookedStart) {
+      return { available: false, conflictingBooking: booking };
+    }
+  }
+
+  return { available: true };
+}

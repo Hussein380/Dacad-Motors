@@ -217,3 +217,30 @@ exports.getBookingExtras = async (req, res) => {
         sendError(res, error.message, 500);
     }
 };
+
+// @desc    Get unavailable/booked dates for a specific car
+// @route   GET /api/cars/:carId/unavailable-dates
+// @access  Public
+exports.getUnavailableDates = async (req, res) => {
+    try {
+        const { carId } = req.params;
+        
+        // Get all active bookings for this car (pending, confirmed, active)
+        const bookings = await Booking.find({
+            car: carId,
+            status: { $in: ['pending', 'confirmed', 'active'] },
+            returnDate: { $gte: new Date() } // Only future/current bookings
+        }).select('pickupDate returnDate status');
+
+        // Return array of date ranges that are unavailable
+        const unavailableDates = bookings.map(booking => ({
+            start: booking.pickupDate,
+            end: booking.returnDate,
+            status: booking.status
+        }));
+
+        sendSuccess(res, unavailableDates);
+    } catch (error) {
+        sendError(res, error.message, 500);
+    }
+};

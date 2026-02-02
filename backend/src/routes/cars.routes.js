@@ -9,6 +9,7 @@ const {
     updateCar,
     deleteCar
 } = require('../controllers/cars.controller');
+const { getUnavailableDates } = require('../controllers/bookings.controller');
 
 const { protect, restrictTo } = require('../middleware/auth.middleware');
 const { uploadCarImage } = require('../middleware/upload.middleware');
@@ -25,6 +26,7 @@ router.get('/featured', cache(3600), getFeaturedCars);  // 1 hour - featured is 
 router.get('/categories', cache(86400), getCategories); // 1 day - rarely changes
 router.get('/locations', cache(86400), getLocations);   // 1 day - fixed locations
 router.get('/:id', getCarById);  // No cache - individual car needs fresh data for booking
+router.get('/:id/unavailable-dates', getUnavailableDates); // Get booked dates for a car
 
 // Admin routes
 router.post('/', protect, restrictTo('admin'), uploadCarImage, validate(carCreateSchema), createCar);

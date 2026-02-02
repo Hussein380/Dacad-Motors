@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarDays, MapPin, Plus, Check } from 'lucide-react';
+import { CalendarDays, MapPin, Plus, Check, AlertTriangle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getBookingExtras, calculateBookingPrice } from '@/services/bookingService';
-import { getLocations } from '@/services/carService';
+import { getLocations, getUnavailableDates, checkDateAvailability, type UnavailableDateRange } from '@/services/carService';
 import { formatPrice } from '@/lib/currency';
 import { type Car } from '@/types';
 
@@ -21,6 +21,8 @@ export function BookingForm({ car }: BookingFormProps) {
   const [locations, setLocations] = useState<string[]>([]);
   const [extras, setExtras] = useState<{ id: string; name: string; pricePerDay: number }[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [unavailableDates, setUnavailableDates] = useState<UnavailableDateRange[]>([]);
+  const [dateConflict, setDateConflict] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     pickupDate: '',
     returnDate: '',
@@ -33,12 +35,38 @@ export function BookingForm({ car }: BookingFormProps) {
 
   useEffect(() => {
     const loadData = async () => {
-      const [locs, exts] = await Promise.all([getLocations(), getBookingExtras()]);
+      const [locs, exts, bookedDates] = await Promise.all([
+        getLocations(), 
+        getBookingExtras(),
+        getUnavailableDates(car.id)
+      ]);
       setLocations(locs);
       setExtras(exts);
+      setUnavailableDates(bookedDates);
     };
     loadData();
-  }, []);
+  }, [car.id]);
+
+  // Check availability whenever dates change
+  useEffect(() => {
+    if (formData.pickupDate && formData.returnDate) {
+      const { available, conflictingBooking } = checkDateAvailability(
+        formData.pickupDate,
+        formData.returnDate,
+        unavailableDates
+      );
+      
+      if (!available && conflictingBooking) {
+        const start = new Date(conflictingBooking.start).toLocaleDateString();
+        const end = new Date(conflictingBooking.end).toLocaleDateString();
+        setDateConflict(`This car is already booked from ${start} to ${end}`);
+      } else {
+        setDateConflict(null);
+      }
+    } else {
+      setDateConflict(null);
+    }
+  }, [formData.pickupDate, formData.returnDate, unavailableDates]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -83,7 +111,8 @@ export function BookingForm({ car }: BookingFormProps) {
     formData.returnDate &&
     formData.customerName &&
     formData.customerEmail &&
-    days > 0;
+    days > 0 &&
+    !dateConflict; // Also check for date conflicts
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -104,6 +133,7 @@ export function BookingForm({ car }: BookingFormProps) {
               onChange={handleChange}
               min={new Date().toISOString().split('T')[0]}
               required
+              className={dateConflict ? 'border-destructive' : ''}
             />
           </div>
           <div>
@@ -116,9 +146,47 @@ export function BookingForm({ car }: BookingFormProps) {
               onChange={handleChange}
               min={formData.pickupDate || new Date().toISOString().split('T')[0]}
               required
+              className={dateConflict ? 'border-destructive' : ''}
             />
           </div>
         </div>
+        
+        {/* Date Conflict Warning */}
+        {dateConflict && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm"
+          >
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>{dateConflict}</span>
+          </motion.div>
+        )}
+        
+        {/* Show Booked Dates */}
+        {unavailableDates.length > 0 && (
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Already booked dates:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {unavailableDates.map((range, idx) => (
+                <span
+                  key={idx}
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    range.status === 'confirmed' 
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                  }`}
+                >
+                  {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
+                  {range.status === 'pending' && ' (pending)'}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Locations */}
