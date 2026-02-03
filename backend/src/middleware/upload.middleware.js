@@ -1,7 +1,11 @@
 const { upload } = require('../config/cloudinary.config');
 
 /**
- * Middleware to handle single image upload for cars
- * Expects the file to be in the 'image' field of the request
+ * Middleware to handle car images upload
+ * image: main cover image (single)
+ * images: additional gallery images (multiple)
  */
-exports.uploadCarImage = upload.single('image');
+exports.uploadCarImage = upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'images', maxCount: 10 }
+]);

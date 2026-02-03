@@ -48,7 +48,10 @@ export default function Admin() {
   const [cars, setCars] = useState<CarType[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCars, setIsLoadingCars] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [carPage, setCarPage] = useState(1);
+  const [carTotal, setCarTotal] = useState(0);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,13 +61,27 @@ export default function Admin() {
     setIsLoading(true);
     try {
       const [carsData, bookingsData] = await Promise.all([
-        getCars(),
+        getCars({ limit: 24, page: 1 } as any),
         getBookings(),
       ]);
       setCars(carsData.cars);
+      setCarTotal(carsData.total);
+      setCarPage(1);
       setBookings(bookingsData.bookings);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadMoreCars = async () => {
+    const nextPage = carPage + 1;
+    setIsLoadingCars(true);
+    try {
+      const carsData = await getCars({ limit: 24, page: nextPage } as any);
+      setCars(prev => [...prev, ...carsData.cars]);
+      setCarPage(nextPage);
+    } finally {
+      setIsLoadingCars(false);
     }
   };
 
@@ -110,7 +127,7 @@ export default function Admin() {
   const stats = [
     {
       label: 'Total Cars',
-      value: cars.length,
+      value: carTotal,
       icon: Car,
       change: '+2 this month',
     },
@@ -386,6 +403,18 @@ export default function Admin() {
                   </motion.div>
                 ))}
             </div>
+
+            {!isLoading && cars.length < carTotal && (
+              <div className="mt-8 flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={loadMoreCars}
+                  disabled={isLoadingCars}
+                >
+                  {isLoadingCars ? 'Loading...' : 'Load More Cars'}
+                </Button>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

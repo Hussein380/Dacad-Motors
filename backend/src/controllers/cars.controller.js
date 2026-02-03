@@ -164,9 +164,14 @@ exports.createCar = async (req, res) => {
     try {
         const carData = { ...req.body };
 
-        // If a file was uploaded, use its URL
-        if (req.file) {
-            carData.imageUrl = req.file.path;
+        // If files were uploaded, use their URLs
+        if (req.files) {
+            if (req.files.image && req.files.image[0]) {
+                carData.imageUrl = req.files.image[0].path;
+            }
+            if (req.files.images) {
+                carData.images = req.files.images.map(file => file.path);
+            }
         }
 
         // Handle nested or stringified features/data if sent via FormData
@@ -204,9 +209,39 @@ exports.updateCar = async (req, res) => {
 
         const carData = { ...req.body };
 
-        // If a new file was uploaded, use its URL
-        if (req.file) {
-            carData.imageUrl = req.file.path;
+        // If new files were uploaded, use their URLs
+        if (req.files) {
+            if (req.files.image && req.files.image[0]) {
+                carData.imageUrl = req.files.image[0].path;
+            }
+            if (req.files.images) {
+                const newImages = req.files.images.map(file => file.path);
+                // If the user is also sending existing images (as a string or array)
+                let existingImages = [];
+                if (carData.existingImages) {
+                    try {
+                        existingImages = typeof carData.existingImages === 'string'
+                            ? JSON.parse(carData.existingImages)
+                            : carData.existingImages;
+                    } catch (e) {
+                        existingImages = carData.existingImages.split(',').map(img => img.trim());
+                    }
+                } else if (!req.files.images && car.images) {
+                    // Fallback to current images if no new images and no explicit existingImages
+                    existingImages = car.images;
+                }
+
+                carData.images = [...existingImages, ...newImages];
+            }
+        }
+
+        // Handle case where images are passed as a JSON string in req.body without new uploads
+        if (typeof carData.images === 'string') {
+            try {
+                carData.images = JSON.parse(carData.images);
+            } catch (e) {
+                carData.images = carData.images.split(',').map(img => img.trim());
+            }
         }
 
         // Handle stringified features

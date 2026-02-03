@@ -14,6 +14,7 @@ const { getUnavailableDates } = require('../controllers/bookings.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
 const { uploadCarImage } = require('../middleware/upload.middleware');
 const validate = require('../middleware/validate.middleware');
+const parseFormData = require('../middleware/parseFormData.middleware');
 const { carCreateSchema, carUpdateSchema } = require('../utils/schemas/car.schema');
 const cache = require('../middleware/cache.middleware');
 
@@ -29,8 +30,8 @@ router.get('/:id', getCarById);  // No cache - individual car needs fresh data f
 router.get('/:id/unavailable-dates', getUnavailableDates); // Get booked dates for a car
 
 // Admin routes
-router.post('/', protect, restrictTo('admin'), uploadCarImage, validate(carCreateSchema), createCar);
-router.put('/:id', protect, restrictTo('admin'), uploadCarImage, validate(carUpdateSchema), updateCar);
+router.post('/', protect, restrictTo('admin'), uploadCarImage, parseFormData(['features', 'images']), validate(carCreateSchema), createCar);
+router.put('/:id', protect, restrictTo('admin'), uploadCarImage, parseFormData(['features', 'images', 'existingImages']), validate(carUpdateSchema), updateCar);
 router.delete('/:id', protect, restrictTo('admin'), deleteCar);
 
 module.exports = router;

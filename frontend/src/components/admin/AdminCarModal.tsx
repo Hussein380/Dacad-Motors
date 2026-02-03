@@ -37,6 +37,9 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
     const [locations, setLocations] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string>('');
+    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+    const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -103,6 +106,9 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 featuredRank: (car as any).featuredRank || 0,
             });
             setPreviewUrl(car.imageUrl);
+            setExistingGalleryImages(car.images || []);
+            setGalleryFiles([]);
+            setGalleryPreviews([]);
         } else {
             setFormData({
                 name: '',
@@ -123,6 +129,9 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
             });
             setPreviewUrl('');
             setSelectedFile(null);
+            setGalleryFiles([]);
+            setGalleryPreviews([]);
+            setExistingGalleryImages([]);
         }
         setError(null);
     }, [car, isOpen, categories]);
@@ -133,6 +142,24 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
             setSelectedFile(file);
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
+        }
+    };
+
+    const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            setGalleryFiles(prev => [...prev, ...files]);
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setGalleryPreviews(prev => [...prev, ...newPreviews]);
+        }
+    };
+
+    const removeGalleryImage = (index: number, isExisting: boolean) => {
+        if (isExisting) {
+            setExistingGalleryImages(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+            setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
         }
     };
 
@@ -150,7 +177,17 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
             if (selectedFile) {
                 data.append('image', selectedFile);
             } else if (!car) {
-                throw new Error('Please select an image');
+                throw new Error('Please select a cover image');
+            }
+
+            // Append new gallery images
+            galleryFiles.forEach(file => {
+                data.append('images', file);
+            });
+
+            // Pass existing images to keep (for updates)
+            if (car) {
+                data.append('existingImages', JSON.stringify(existingGalleryImages));
             }
 
             let result;
@@ -210,42 +247,94 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Image Upload */}
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium mb-2">Car Image</label>
-                                    <div className="relative group aspect-video rounded-xl border-2 border-dashed border-border hover:border-accent transition-colors overflow-hidden">
-                                        {previewUrl ? (
-                                            <>
-                                                <img
-                                                    src={previewUrl}
-                                                    alt="Preview"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <label className="cursor-pointer bg-white text-black px-4 py-2 rounded-full font-medium text-sm hover:scale-105 transition-transform">
-                                                        Change Image
-                                                        <input
-                                                            type="file"
-                                                            className="hidden"
-                                                            accept="image/*"
-                                                            onChange={handleFileChange}
-                                                        />
-                                                    </label>
+                                {/* Image Upload */}
+                                <div className="space-y-4 md:col-span-2">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Cover Image</label>
+                                        <div className="relative group aspect-video rounded-xl border-2 border-dashed border-border hover:border-accent transition-colors overflow-hidden">
+                                            {previewUrl ? (
+                                                <>
+                                                    <img
+                                                        src={previewUrl}
+                                                        alt="Preview"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <label className="cursor-pointer bg-white text-black px-4 py-2 rounded-full font-medium text-sm hover:scale-105 transition-transform">
+                                                            Change Cover
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                accept="image/*"
+                                                                onChange={handleFileChange}
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <label className="absolute inset-0 cursor-pointer flex flex-col items-center justify-center gap-2 hover:bg-secondary/50 transition-colors">
+                                                    <Upload className="w-8 h-8 text-muted-foreground" />
+                                                    <span className="text-sm font-medium">Click to upload cover image</span>
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={handleFileChange}
+                                                        required={!car}
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Gallery Images */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Gallery Images (Optional)</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                            {/* Existing Gallery Images */}
+                                            {existingGalleryImages.map((url, idx) => (
+                                                <div key={`existing-${idx}`} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                                                    <img src={url} alt="Gallery" className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeGalleryImage(idx, true)}
+                                                        className="absolute top-1 right-1 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
                                                 </div>
-                                            </>
-                                        ) : (
-                                            <label className="absolute inset-0 cursor-pointer flex flex-col items-center justify-center gap-2 hover:bg-secondary/50 transition-colors">
-                                                <Upload className="w-8 h-8 text-muted-foreground" />
-                                                <span className="text-sm font-medium">Click to upload image</span>
-                                                <span className="text-xs text-muted-foreground">JPG, PNG or WEBP (max 5MB)</span>
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    onChange={handleFileChange}
-                                                    required={!car}
-                                                />
-                                            </label>
-                                        )}
+                                            ))}
+
+                                            {/* New Gallery Previews */}
+                                            {galleryPreviews.map((url, idx) => (
+                                                <div key={`new-${idx}`} className="relative group aspect-square rounded-lg overflow-hidden border border-accent/50">
+                                                    <img src={url} alt="New Preview" className="w-full h-full object-cover" />
+                                                    <div className="absolute top-1 left-1 px-1 bg-accent text-[10px] text-accent-foreground font-bold rounded">NEW</div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeGalleryImage(idx, false)}
+                                                        className="absolute top-1 right-1 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {/* Upload Button */}
+                                            {existingGalleryImages.length + galleryFiles.length < 10 && (
+                                                <label className="cursor-pointer aspect-square rounded-lg border-2 border-dashed border-border hover:border-accent flex flex-col items-center justify-center gap-1 transition-colors hover:bg-secondary/30">
+                                                    <Upload className="w-5 h-5 text-muted-foreground" />
+                                                    <span className="text-[10px] font-medium text-center">Add Gallery Image</span>
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={handleGalleryChange}
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
