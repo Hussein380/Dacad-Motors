@@ -24,6 +24,11 @@ api/.env
 # Backend dev scripts (tests, local runners - do not push)
 backend/tests/
 backend/scripts/test-*.js
+backend/scripts/debug-*.js
+backend/scripts/list-cars.js
+backend/scripts/verify-key.js
+backend/*.txt
+backend/logs/ai-debug.txt
 
 # Project documentation (requested exclusion)
 docs/

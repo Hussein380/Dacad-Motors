@@ -1,5 +1,6 @@
 const Car = require('../models/Car');
 const Booking = require('../models/Booking');
+const bookingService = require('./booking.service');
 const { NAIROBI_LOCATIONS } = require('../config/locations.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
@@ -222,8 +223,103 @@ const getFleetContext = async () => {
 };
 
 /**
- * Get AI Chat response using Gemini with hierarchical fallback and DYNAMIC context
+ * Tool definitions for Gemini Function Calling
  */
+const tools = [
+    {
+        functionDeclarations: [
+            {
+                name: "check_availability",
+                description: "Check if a specific car or category is available for a given date range. ALWAYS use this tool when the user asks about availability for specific dates.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        query: {
+                            type: "STRING",
+                            description: "The car name (e.g. 'Toyota Prado'), brand (e.g. 'Toyota'), or category (e.g. 'SUV', 'Sedan') the user is looking for."
+                        },
+                        pickupDate: {
+                            type: "STRING",
+                            description: "The pickup date in ISO 8601 format (YYYY-MM-DD)."
+                        },
+                        returnDate: {
+                            type: "STRING",
+                            description: "The return date in ISO 8601 format (YYYY-MM-DD)."
+                        }
+                    },
+                    required: ["query", "pickupDate", "returnDate"]
+                }
+            }
+        ]
+    }
+];
+
+/**
+ * Execute the check_availability tool
+ */
+async function executeCheckAvailability({ query, pickupDate, returnDate }) {
+    console.log(`🛠️ Tool Execution: check_availability('${query}', ${pickupDate}, ${returnDate})`);
+
+    try {
+        const pDate = new Date(pickupDate);
+        const rDate = new Date(returnDate);
+
+        if (isNaN(pDate.getTime()) || isNaN(rDate.getTime())) {
+            return { error: "Invalid date format. Please use YYYY-MM-DD." };
+        }
+
+        // 1. Find candidate cars based on the query (name, brand, or category)
+        const searchRegex = new RegExp(query, 'i');
+        const candidateCars = await Car.find({
+            available: true,
+            $or: [
+                { name: searchRegex },
+                { brand: searchRegex },
+                { model: searchRegex },
+                { category: searchRegex }
+            ]
+        }).select('name brand model category pricePerDay imageUrl');
+
+        if (candidateCars.length === 0) {
+            return {
+                available: false,
+                message: `No cars found matching "${query}". We have: SUV, Sedan, Economy, Luxury.`
+            };
+        }
+
+        // 2. Check overlap for each candidate
+        const availableCars = [];
+        for (const car of candidateCars) {
+            const isAvailable = await bookingService.checkCarAvailability(car._id, pDate, rDate);
+            if (isAvailable) {
+                availableCars.push(car);
+            }
+        }
+
+        if (availableCars.length === 0) {
+            return {
+                available: false,
+                message: `Sorry, all our ${query}s are fully booked for those dates.`
+            };
+        }
+
+        // 3. Return top 3 matches
+        return {
+            available: true,
+            count: availableCars.length,
+            cars: availableCars.slice(0, 3).map(c => ({
+                name: c.name,
+                price: c.pricePerDay,
+                category: c.category
+            }))
+        };
+
+    } catch (error) {
+        console.error("Tool execution error:", error);
+        return { error: "Failed to check availability due to an internal error." };
+    }
+}
+
 /**
  * Get AI Chat response using Gemini with hierarchical fallback and DYNAMIC context
  * 
@@ -238,97 +334,89 @@ exports.getAIChatResponse = async (userMessage, history = []) => {
     // 1. Fetch Real Data from DB to inform the AI
     const context = await getFleetContext();
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1' });
 
-    const models = ['models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemma-3-1b-it'];
+    // Use a model that supports function calling reliably (Flash 2.0 or 1.5 Pro)
+    // Use a model that supports function calling reliably
+    const models = [
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro',
+        'gemini-2.0-flash'
+    ];
 
     const systemInstruction = `
-    Identity: You are the Sol Travel AI Assistant, a friendly car rental expert for ${context?.companyName || 'Sol Travel Group'} in ${context?.location || 'Nairobi, Kenya'}.
+    Identity: You are the Sol Travel AI Assistant, a friendly car rental expert.
     
-    CRITICAL RESTRICTION: You ONLY handle car rentals. 
-    - If a user asks about anything else (houses, girls, jobs, food, politics, etc.), politely explain that you are specialized ONLY in car rentals and cannot assist with other topics. 
-    - Never try to "adapt" your car info to other topics (e.g., do not talk about "Luxury Houses" or "Safari Houses" if asked about house rentals).
-    
-    Interaction Rules:
-    1. GREETINGS & PERSONALITY: 
-       - If there is NO history (this is the first message), introduce yourself naturally (e.g., "Hi! I'm your Sol Travel assistant...").
-       - If there IS history, DO NOT introduce yourself or say "Hi there! Welcome to Sol Travel" again. Just answer the question directly and stay in the flow of conversation.
-       - Use a friendly, professional tone. You can use emojis sparingly to feel more human.
-    
-    2. SCOPE CONTROL: 
-       - You are a CAR RENTAL AI only. 
-       - If asked about "houses", "hotels", "flights", "girls", etc., say: "I'd love to help, but I specialize exclusively in car rentals. I can help you find a great vehicle for your stay though! Would you like to see our SUVs or Sedans?"
-       - NEVER hallucinate non-car categories.
-    
-    3. ACCURACY: 
-       - When asked for a specific type (e.g., 'SUV', 'Pickup', 'Safari'), ONLY recommend cars from that category in the fleet data below. 
-       - If someone asks "how are you?", answer naturally (e.g., "I'm doing great, thanks for asking! Ready to help you find a car.") before getting back to business.
-    
-    4. COUNTER-QUESTIONS: If a user is vague (e.g., "any cars?"), don't just dump a list. Ask them about their needs (e.g., "Yes! Are you looking for something for city driving, a family trip, or perhaps a safari adventure?").
-    
-    Real-Time Fleet Data (Source of truth):
-    - Categories: ${context?.categories || 'Economy, Compact, Sedan, SUV, Luxury, Safari 4x4, Van, Pickup'}
-    - Price Range: ${context?.priceRange || 'Rates starting from approx $35/day'} (Quotes are in KES per day)
-    - Pickup Points: ${context?.locations || 'JKIA, Nairobi CBD, Westlands'}
-    - Featured Cars: ${context?.availableCars || 'Toyota Vitz, Corolla, RAV4, Prado, Land Cruiser'}
-    
-    Contact:
-    - WhatsApp/Phone: ${context?.phone || '+254 722 235 748'}
-    - Email: ${context?.email || 'soltravelgroupltd@gmail.com'}
-    
-    Formatting:
-    - Use plain text. Use • for lists. Keep responses concise but useful.
+    CAPABILITY: You have access to a tool 'check_availability' that effectively checks the REAL database.
+    - IF the user asks "Is X available on date Y?", you MUST call this tool.
+    - If the user provides a vague date (e.g. "next Friday"), calculate the ISO date (YYYY-MM-DD) yourself based on the current date (${new Date().toISOString().split('T')[0]}) and call the tool.
+    - If the tool returns available cars, present them enthusiastically.
+    - If the tool returns no cars, suggest alternatives from the general fleet info.
+
+    General Context:
+    - Company: ${context?.companyName || 'Sol Travel'}
+    - Fleet Categories: ${context?.categories}
+    - Prices: ${context?.priceRange}
+    - Location: ${context?.locations}
     `;
 
     let lastError = null;
 
     for (const modelName of models) {
         try {
-            console.log(`🤖 Attempting AI response with ${modelName} (History items: ${history.length})...`);
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+                tools: tools
+            });
 
-            const isGemma = modelName.includes('gemma');
-            const modelOptions = { model: modelName };
-
-            if (!isGemma) {
-                modelOptions.systemInstruction = systemInstruction;
-            }
-
-            const model = genAI.getGenerativeModel(modelOptions);
-
-            // Format history for Gemini API
-            // The API expects: [{ role: 'user', parts: [{ text: '...' }] }, { role: 'model', parts: [{ text: '...' }] }]
             const formattedHistory = history.map(msg => ({
                 role: msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.content }]
             }));
 
             const chat = model.startChat({
-                history: isGemma ? [] : formattedHistory,
+                history: formattedHistory,
                 generationConfig: {
-                    maxOutputTokens: 500,
+                    maxOutputTokens: 1000,
                 },
             });
 
-            const prompt = isGemma
-                ? `Instructions: ${systemInstruction}\n\nConversation History:\n${history.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nUser: ${userMessage}`
-                : userMessage;
-
-            const result = await chat.sendMessage(prompt);
+            const result = await chat.sendMessage(userMessage);
             const response = await result.response;
-            const text = response.text();
 
-            if (text) {
-                console.log(`✅ Success with ${modelName}`);
-                return text;
+            const functionCalls = response.functionCalls();
+
+            if (functionCalls && functionCalls.length > 0) {
+                const call = functionCalls[0];
+                if (call.name === 'check_availability') {
+                    const apiResponse = await executeCheckAvailability(call.args);
+
+                    const result2 = await chat.sendMessage([
+                        {
+                            functionResponse: {
+                                name: 'check_availability',
+                                response: apiResponse
+                            }
+                        }
+                    ]);
+
+                    return result2.response.text();
+                }
             }
+
+            return response.text();
+
         } catch (error) {
-            console.warn(`⚠️ ${modelName} failed or unavailable: ${error.message}`);
+            console.warn(`⚠️ ${modelName} call failed: ${error.message}`);
             lastError = error;
         }
     }
 
-    console.error('❌ All AI models failed.');
-    throw new Error(`The AI assistant is temporarily unavailable: ${lastError ? lastError.message : 'Unknown error'}`);
+    throw new Error(`AI Service Unavailable: ${lastError ? lastError.message : 'Unknown error'}`);
 };
 
 
