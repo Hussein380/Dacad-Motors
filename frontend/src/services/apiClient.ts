@@ -7,10 +7,13 @@
  */
 const getBaseUrl = (): string => {
   // Explicit env var takes priority
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  let url = import.meta.env.VITE_API_URL;
+
+  if (url) {
+    // Remove trailing slash if present to avoid double slashes with endpoints
+    return url.endsWith('/') ? url.slice(0, -1) : url;
   }
-  
+
   // Check if running in browser and on localhost
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -18,7 +21,7 @@ const getBaseUrl = (): string => {
       return 'http://localhost:5000/api';
     }
   }
-  
+
   // Production: use relative path (same origin on Vercel)
   return '/api';
 };
