@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Car, AlertCircle, ArrowRight, Check } from 'lucide-react';
+import { Mail, Lock, User, Car, AlertCircle, ArrowRight, Check, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -65,6 +65,16 @@ export default function Register() {
             {/* Background Orbs */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+            {/* Back to Home Button */}
+            <div className="absolute top-8 left-8 z-20">
+                <Link to="/">
+                    <Button variant="ghost" className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10 flex items-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Home
+                    </Button>
+                </Link>
+            </div>
 
             <div className="sm:mx-auto sm:w-full sm:max-auto relative z-10 text-center">
                 <motion.div

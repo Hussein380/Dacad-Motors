@@ -1,17 +1,33 @@
 const Inquiry = require('../models/Inquiry');
 const { sendSuccess, sendError } = require('../utils/response');
+const { sendEmailDirectly } = require('../services/email.service');
 
 // @desc    Create new inquiry
 // @route   POST /api/inquiries
 // @access  Public
 exports.createInquiry = async (req, res) => {
     try {
+        // Map carId from frontend to car for Mongoose
+        if (req.body.carId) {
+            req.body.car = req.body.carId;
+        }
+
         // Add user to body if logged in
         if (req.user) {
             req.body.user = req.user.id;
         }
 
         const inquiry = await Inquiry.create(req.body);
+
+        // Notify Admin
+        await sendEmailDirectly('admin-new-inquiry', {
+            customerName: inquiry.customerName,
+            customerEmail: inquiry.email,
+            customerPhone: inquiry.phone,
+            message: inquiry.message,
+            inquiryType: inquiry.type,
+            inquiryId: inquiry._id
+        });
 
         sendSuccess(res, inquiry, 'Inquiry sent successfully', 201);
     } catch (error) {

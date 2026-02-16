@@ -25,6 +25,7 @@ interface InquiryFormProps {
 export function InquiryForm({ car }: InquiryFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [countryCode, setCountryCode] = useState('+254');
     const [formData, setFormData] = useState({
         customerName: '',
         email: '',
@@ -47,9 +48,13 @@ export function InquiryForm({ car }: InquiryFormProps) {
         setIsSubmitting(true);
 
         try {
+            // Prepend country code to phone
+            const fullPhone = `${countryCode}${formData.phone.replace(/^0+/, '')}`;
+
             await createInquiry({
                 carId: car.id || car._id,
                 ...formData,
+                phone: fullPhone,
                 type: formData.requestTestDrive ? 'Test Drive' : formData.type as any
             });
             setIsSuccess(true);
@@ -121,19 +126,40 @@ export function InquiryForm({ car }: InquiryFormProps) {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone</Label>
-                            <div className="relative">
-                                <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                    type="tel"
-                                    id="phone"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    className="pl-9"
-                                    placeholder="+254..."
-                                    required
-                                />
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <div className="flex gap-2">
+                                <div className="w-[120px] flex-shrink-0">
+                                    <Select
+                                        defaultValue="+254"
+                                        onValueChange={(val) => setCountryCode(val)}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="+254">🇰🇪 +254</SelectItem>
+                                            <SelectItem value="+255">🇹🇿 +255</SelectItem>
+                                            <SelectItem value="+256">🇺🇬 +256</SelectItem>
+                                            <SelectItem value="+250">🇷🇼 +250</SelectItem>
+                                            <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                                            <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                                            <SelectItem value="+971">🇦🇪 +971</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="relative flex-grow">
+                                    <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                    <Input
+                                        type="tel"
+                                        id="phone"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        className="pl-9"
+                                        placeholder="7XX XXX XXX"
+                                        required
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
