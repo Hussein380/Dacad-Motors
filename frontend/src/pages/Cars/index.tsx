@@ -20,9 +20,13 @@ export default function Cars() {
     // Initialize filters from URL params
     const category = searchParams.get('category');
     const search = searchParams.get('search');
+    const brand = searchParams.get('brand');
+    const year = searchParams.get('year');
     const initialFilters: CarFiltersType = {};
     if (category) initialFilters.category = category;
     if (search) initialFilters.search = search;
+    if (brand) initialFilters.brand = brand;
+    if (year) initialFilters.year = parseInt(year, 10);
     return initialFilters;
   });
 
@@ -64,6 +68,8 @@ export default function Cars() {
     const params = new URLSearchParams();
     if (newFilters.category) params.set('category', newFilters.category);
     if (newFilters.search) params.set('search', newFilters.search);
+    if (newFilters.brand) params.set('brand', newFilters.brand);
+    if (newFilters.year) params.set('year', newFilters.year.toString());
     setSearchParams(params);
   };
 

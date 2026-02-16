@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { getCategories, getLocations } from '@/services/carService';
+import { getCategories, getLocations, getBrands, getYears } from '@/services/carService';
 import type { CarFilters as CarFiltersType } from '@/services/carService';
 
 interface CarFiltersProps {
@@ -19,13 +19,22 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [years, setYears] = useState<number[]>([]);
   const [priceRange, setPriceRange] = useState([0, 500]);
 
   useEffect(() => {
     const loadFiltersData = async () => {
-      const [cats, locs] = await Promise.all([getCategories(), getLocations()]);
+      const [cats, locs, brandList, yearList] = await Promise.all([
+        getCategories(),
+        getLocations(),
+        getBrands(),
+        getYears()
+      ]);
       setCategories(cats);
       setLocations(locs);
+      setBrands(brandList);
+      setYears(yearList);
     };
     loadFiltersData();
   }, []);
@@ -68,6 +77,20 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
     onFilterChange({
       ...filters,
       location: filters.location === location ? undefined : location,
+    });
+  };
+
+  const handleBrandChange = (brand: string) => {
+    onFilterChange({
+      ...filters,
+      brand: filters.brand === brand ? undefined : brand,
+    });
+  };
+
+  const handleYearChange = (year: number) => {
+    onFilterChange({
+      ...filters,
+      year: filters.year === year ? undefined : year,
     });
   };
 
@@ -177,6 +200,40 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
                   >
                     Manual
                   </Button>
+                </div>
+              </div>
+
+              {/* Brands */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Brand</Label>
+                <div className="flex flex-wrap gap-2">
+                  {brands.map((brand) => (
+                    <Button
+                      key={brand}
+                      variant={filters.brand === brand ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleBrandChange(brand)}
+                    >
+                      {brand}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Years */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Year</Label>
+                <div className="flex flex-wrap gap-2">
+                  {years.map((year) => (
+                    <Button
+                      key={year}
+                      variant={filters.year === year ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleYearChange(year)}
+                    >
+                      {year}
+                    </Button>
+                  ))}
                 </div>
               </div>
 

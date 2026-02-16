@@ -146,6 +146,30 @@ exports.getCategories = async (req, res) => {
     }
 };
 
+// @desc    Get all unique brands
+// @route   GET /api/cars/brands
+// @access  Public
+exports.getBrands = async (req, res) => {
+    try {
+        const brands = await Car.distinct('brand');
+        sendSuccess(res, brands.sort());
+    } catch (error) {
+        sendError(res, error.message, 500);
+    }
+};
+
+// @desc    Get all unique years
+// @route   GET /api/cars/years
+// @access  Public
+exports.getYears = async (req, res) => {
+    try {
+        const years = await Car.distinct('year');
+        sendSuccess(res, years.sort((a, b) => b - a)); // Sort descending (newest first)
+    } catch (error) {
+        sendError(res, error.message, 500);
+    }
+};
+
 // @desc    Get pickup/return locations (Nairobi only)
 // @route   GET /api/cars/locations
 // @access  Public

@@ -5,6 +5,8 @@ const {
     getFeaturedCars,
     getCategories,
     getLocations,
+    getBrands,
+    getYears,
     createCar,
     updateCar,
     deleteCar
@@ -26,6 +28,8 @@ router.get('/', cache(300), getCars);              // 5 mins - car list may chan
 router.get('/featured', cache(3600), getFeaturedCars);  // 1 hour - featured is stable
 router.get('/categories', cache(86400), getCategories); // 1 day - rarely changes
 router.get('/locations', cache(86400), getLocations);   // 1 day - fixed locations
+router.get('/brands', cache(86400), getBrands);         // 1 day - brands are stable
+router.get('/years', cache(86400), getYears);           // 1 day - years are stable
 router.get('/:id', getCarById);  // No cache - individual car needs fresh data for booking
 router.get('/:id/unavailable-dates', getUnavailableDates); // Get booked dates for a car
 

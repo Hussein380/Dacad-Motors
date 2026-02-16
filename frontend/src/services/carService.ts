@@ -19,6 +19,8 @@ export interface CarFilters {
   seats?: number;
   available?: boolean;
   search?: string;
+  brand?: string;
+  year?: number;
   page?: number;
   limit?: number;
   sort?: string;
@@ -146,6 +148,28 @@ export async function getCategories(): Promise<{ id: string; name: string; icon:
  */
 export async function getLocations() {
   const response = await apiRequest<string[]>('/cars/locations');
+  if (response.success && response.data) {
+    return response.data;
+  }
+  return [];
+}
+
+/**
+ * Get all available brands
+ */
+export async function getBrands(): Promise<string[]> {
+  const response = await apiRequest<string[]>('/cars/brands');
+  if (response.success && response.data) {
+    return response.data;
+  }
+  return [];
+}
+
+/**
+ * Get all available years
+ */
+export async function getYears(): Promise<number[]> {
+  const response = await apiRequest<number[]>('/cars/years');
   if (response.success && response.data) {
     return response.data;
   }

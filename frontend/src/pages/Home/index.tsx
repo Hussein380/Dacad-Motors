@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Calendar, ArrowRight, Sparkles, Shield, Clock, Star, Car, Banknote, Headphones } from 'lucide-react';
+import { Search, MapPin, Calendar, ArrowRight, Sparkles, Shield, Clock, Star, Car as CarIcon, Banknote, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,29 +15,37 @@ import { Layout } from '@/components/common/Layout';
 import { CarCard } from '@/components/cars/CarCard';
 import { CarCardSkeleton } from '@/components/common/Skeleton';
 import { LazyImage } from '@/components/common/LazyImage';
-import { getFeaturedCars, getCategories } from '@/services/carService';
+import { getFeaturedCars, getCategories, getBrands, getYears } from '@/services/carService';
 import { getRecommendations } from '@/services/recommendationService';
 import type { Car } from '@/types';
 
 export default function Home() {
   const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [years, setYears] = useState<number[]>([]);
   const [recommendations, setRecommendations] = useState<{ car: Car; reason: string; tags: string[] }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedBrand, setSelectedBrand] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [cars, cats, recs] = await Promise.all([
+        const [cars, cats, recs, brandList, yearList] = await Promise.all([
           getFeaturedCars(4),
           getCategories(),
           getRecommendations(),
+          getBrands(),
+          getYears(),
         ]);
         setFeaturedCars(cars);
         setCategories(cats);
         setRecommendations(recs);
+        setBrands(brandList);
+        setYears(yearList);
       } finally {
         setIsLoading(false);
       }
@@ -131,7 +139,40 @@ export default function Home() {
                         <SelectItem value="all">All Categories</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
+                            <span className="flex items-center gap-2">
+                              <span>{cat.icon}</span>
+                              <span>{cat.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative">
+                    <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue placeholder="Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative">
+                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Years</SelectItem>
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -140,7 +181,7 @@ export default function Home() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
-                      placeholder="Brand or Model"
+                      placeholder="Model or Keywords"
                       className="pl-10 h-12"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -152,7 +193,7 @@ export default function Home() {
                   size="lg"
                   className="w-full gradient-accent text-accent-foreground border-0 shadow-accent h-12"
                 >
-                  <Link to={`/cars?category=${selectedCategory !== 'all' ? selectedCategory : ''}&search=${searchQuery}`}>
+                  <Link to={`/cars?category=${selectedCategory !== 'all' ? selectedCategory : ''}&brand=${selectedBrand !== 'all' ? selectedBrand : ''}&year=${selectedYear !== 'all' ? selectedYear : ''}&search=${searchQuery}`}>
                     <Search className="w-5 h-5 mr-2" />
                     Find Your Car
                   </Link>
