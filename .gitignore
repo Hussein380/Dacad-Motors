@@ -21,14 +21,15 @@ backend/.env
 frontend/.env
 api/.env
 
-# Backend dev scripts (tests, local runners - do not push)
+# Backend dev / test artifacts (do not push)
 backend/tests/
 backend/scripts/test-*.js
 backend/scripts/debug-*.js
-backend/scripts/list-cars.js
-backend/scripts/verify-key.js
+backend/test-*.js
+backend/test_*.js
+backend/verify-*.js
 backend/*.txt
-backend/logs/ai-debug.txt
+backend/logs/
 
 # Project documentation (requested exclusion)
 docs/
