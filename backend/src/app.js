@@ -34,6 +34,7 @@ app.use('/api/bookings', require('./routes/bookings.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/users', require('./routes/users.routes'));
+app.use('/api/inquiries', require('./routes/inquiries.routes'));
 
 // Base route for health check
 app.get('/', (req, res) => {
@@ -89,20 +90,20 @@ app.get('/api/debug-cars', async (req, res) => {
     const mongoose = require('mongoose');
     const Car = require('./models/Car');
     const { client } = require('./config/redis.config');
-    
+
     try {
         // Same query logic as getCars controller
         const query = { ...req.query };
         const removeFields = ['select', 'sort', 'page', 'limit', 'search', 'featured', 'path'];
         removeFields.forEach(param => delete query[param]);
-        
+
         let queryStr = JSON.stringify(query);
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
         const parsedQuery = JSON.parse(queryStr);
-        
+
         const total = await Car.countDocuments(parsedQuery);
         const cars = await Car.find(parsedQuery).limit(5);
-        
+
         sendSuccess(res, {
             total,
             sampleCount: cars.length,

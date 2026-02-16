@@ -22,6 +22,8 @@ frontend/.env
 api/.env
 
 # Backend dev / test artifacts (do not push)
+backend/seeds/
+backend/seed-*.js
 backend/tests/
 backend/scripts/test-*.js
 backend/scripts/debug-*.js
@@ -30,6 +32,11 @@ backend/test_*.js
 backend/verify-*.js
 backend/*.txt
 backend/logs/
+
+# Debug files
+error_log.txt
+health_check.txt
+debug_log.txt
 
 # Project documentation (requested exclusion)
 docs/

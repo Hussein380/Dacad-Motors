@@ -28,7 +28,8 @@ const carSchema = new mongoose.Schema({
     },
     pricePerDay: {
         type: Number,
-        required: [true, 'Please add a price per day']
+        required: false, // Optional for Sales-only cars
+        default: 0
     },
     imageUrl: {
         type: String,
@@ -87,6 +88,32 @@ const carSchema = new mongoose.Schema({
     featuredUntil: {
         type: Date,
         default: null
+    },
+    salePrice: {
+        type: Number,
+        required: false // Optional, only for cars for sale
+    },
+    mileage: {
+        type: Number,
+        required: false // Optional
+    },
+    condition: {
+        type: String,
+        enum: ['New', 'Used', 'Certified Pre-Owned'],
+        required: false
+    },
+    listingType: {
+        type: String,
+        enum: ['Rent', 'Sale', 'Both'],
+        default: 'Rent' // Default to Rent to preserve existing behavior
+    },
+    previousOwners: {
+        type: Number,
+        default: 0
+    },
+    historyUrl: {
+        type: String,
+        required: false
     },
     createdAt: {
         type: Date,

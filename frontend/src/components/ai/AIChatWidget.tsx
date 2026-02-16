@@ -143,7 +143,7 @@ export function AIChatWidget() {
     <>
       {/* WhatsApp Button */}
       <motion.a
-        href="https://wa.me/254722235748"
+        href="https://wa.me/254722344116"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-6 z-50 w-12 h-12 rounded-full bg-[#25D366] shadow-lg flex items-center justify-center text-white hover:bg-[#20BA5C] transition-colors"

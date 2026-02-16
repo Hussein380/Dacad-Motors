@@ -20,6 +20,23 @@ export interface Car {
     location: string;
     mileage: string;
     description: string;
+    listingType?: 'Rent' | 'Sale' | 'Both';
+    salePrice?: number;
+    condition?: 'New' | 'Used' | 'Certified Pre-Owned';
+    historyUrl?: string;
+}
+
+export interface Inquiry {
+    id: string;
+    carId: string;
+    carName: string;
+    customerName: string;
+    email: string;
+    phone: string;
+    message: string;
+    type: 'General Inquiry' | 'Test Drive' | 'Purchase Offer' | 'Trade-In';
+    status: 'New' | 'Contacted' | 'Scheduled' | 'Sold' | 'Closed';
+    createdAt: string;
 }
 
 export interface Booking {

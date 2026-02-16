@@ -12,6 +12,7 @@ import { ImageGallery } from '@/components/cars/ImageGallery';
 import { getCarById } from '@/services/carService';
 import { formatPrice } from '@/lib/currency';
 import type { Car } from '@/types';
+import { InquiryForm } from '@/components/cars/InquiryForm';
 
 export default function CarDetails() {
   const { id } = useParams<{ id: string }>();
@@ -232,16 +233,24 @@ export default function CarDetails() {
           >
             <div className="lg:sticky lg:top-24 space-y-4">
               {/* Price Card */}
+              {/* Price Card */}
               <Card className="p-6 text-center gradient-hero text-primary-foreground">
-                <p className="text-sm text-primary-foreground/70">Starting from</p>
+                <p className="text-sm text-primary-foreground/70">
+                  {car.listingType === 'Sale' ? 'Asking Price' : 'Starting from'}
+                </p>
                 <p className="font-display text-4xl font-bold">
-                  {formatPrice(car.pricePerDay)}
-                  <span className="text-lg font-normal">/day</span>
+                  {car.listingType === 'Sale'
+                    ? formatPrice(car.salePrice || 0)
+                    : formatPrice(car.pricePerDay)
+                  }
+                  {car.listingType !== 'Sale' && <span className="text-lg font-normal">/day</span>}
                 </p>
               </Card>
 
-              {/* Booking Form */}
-              {car.available ? (
+              {/* Booking/Inquiry Form */}
+              {car.listingType === 'Sale' ? (
+                <InquiryForm car={car} />
+              ) : car.available ? (
                 <BookingForm car={car} />
               ) : (
                 <Card className="p-6 text-center">
