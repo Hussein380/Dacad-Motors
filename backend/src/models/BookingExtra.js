@@ -12,9 +12,9 @@ const bookingExtraSchema = new mongoose.Schema({
         required: [true, 'Please add a name for the extra'],
         trim: true
     },
-    pricePerDay: {
+    rentPrice: {
         type: Number,
-        required: [true, 'Please add a price per day for the extra']
+        required: [true, 'Please add a rent price for the extra']
     },
     available: {
         type: Boolean,

@@ -26,14 +26,14 @@ const carSchema = new mongoose.Schema({
         trim: true
         // No enum - validates against Category collection dynamically
     },
-    pricePerDay: {
+    rentPrice: {
         type: Number,
-        required: false, // Optional for Sales-only cars
+        required: false, // Optional, only for cars for rent
         default: 0
     },
     imageUrl: {
         type: String,
-        required: [true, 'Please add an image URL']
+        required: false // Populated from file upload
     },
     images: {
         type: [String],

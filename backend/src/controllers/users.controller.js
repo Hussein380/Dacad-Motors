@@ -11,8 +11,8 @@ exports.getMyProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id)
             .select('-password')
-            .populate('favorites', 'name brand model imageUrl pricePerDay category');
-        
+            .populate('favorites', 'name brand model imageUrl rentPrice category');
+
         if (!user) {
             return sendError(res, 'User not found', 404);
         }
@@ -71,7 +71,7 @@ exports.addFavorite = async (req, res) => {
         }
 
         const user = await User.findById(req.user._id);
-        
+
         // Check if already in favorites
         if (user.favorites.includes(carId)) {
             return sendError(res, 'Car already in favorites', 400);
@@ -82,7 +82,7 @@ exports.addFavorite = async (req, res) => {
 
         const updatedUser = await User.findById(req.user._id)
             .select('-password')
-            .populate('favorites', 'name brand model imageUrl pricePerDay category');
+            .populate('favorites', 'name brand model imageUrl rentPrice category');
 
         sendSuccess(res, updatedUser, 'Car added to favorites');
     } catch (error) {
@@ -103,7 +103,7 @@ exports.removeFavorite = async (req, res) => {
             req.user._id,
             { $pull: { favorites: carId } },
             { new: true }
-        ).select('-password').populate('favorites', 'name brand model imageUrl pricePerDay category');
+        ).select('-password').populate('favorites', 'name brand model imageUrl rentPrice category');
 
         sendSuccess(res, user, 'Car removed from favorites');
     } catch (error) {

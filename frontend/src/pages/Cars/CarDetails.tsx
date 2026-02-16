@@ -241,7 +241,7 @@ export default function CarDetails() {
                 <p className="font-display text-4xl font-bold">
                   {car.listingType === 'Sale'
                     ? formatPrice(car.salePrice || 0)
-                    : formatPrice(car.pricePerDay)
+                    : formatPrice(car.rentPrice)
                   }
                   {car.listingType !== 'Sale' && <span className="text-lg font-normal">/day</span>}
                 </p>

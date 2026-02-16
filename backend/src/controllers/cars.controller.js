@@ -207,16 +207,31 @@ exports.createCar = async (req, res) => {
             }
         }
 
+
         // Generate name from brand and model if missing
         if (!carData.name && carData.brand && carData.model) {
             carData.name = `${carData.brand} ${carData.model}`;
         }
 
+        // DEBUG: Log the data being sent to Car.create
+        console.log('=== CREATE CAR DEBUG ===');
+        console.log('Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('Files:', req.files);
+        console.log('Final carData:', JSON.stringify(carData, null, 2));
+        console.log('========================');
+
         const car = await Car.create(carData);
         await clearCarCache();
         sendSuccess(res, car, 'Car created successfully', 201);
     } catch (error) {
-        console.error('Create Car Error:', error);
+        console.error('=== CREATE CAR ERROR ===');
+        console.error('Error Name:', error.name);
+        console.error('Error Message:', error.message);
+        if (error.errors) {
+            console.error('Validation Errors:', JSON.stringify(error.errors, null, 2));
+        }
+        console.error('Full Error:', error);
+        console.error('========================');
         sendError(res, error.message, 400);
     }
 };
@@ -233,33 +248,38 @@ exports.updateCar = async (req, res) => {
 
         const carData = { ...req.body };
 
-        // If new files were uploaded, use their URLs
+        // Handle images: Merge existingGallery, new uploads, or handle explicit body updates
+        let existingImages = [];
+        if (carData.existingImages) {
+            try {
+                existingImages = typeof carData.existingImages === 'string'
+                    ? JSON.parse(carData.existingImages)
+                    : carData.existingImages;
+            } catch (e) {
+                existingImages = carData.existingImages.split(',').map(img => img.trim());
+            }
+        } else if (!req.files?.images && !req.body.images && car.images) {
+            // Only fallback to current if no existingImages AND no new files AND no images field sent
+            existingImages = car.images;
+        }
+
         if (req.files) {
             if (req.files.image && req.files.image[0]) {
                 carData.imageUrl = req.files.image[0].path;
             }
+
             if (req.files.images) {
                 const newImages = req.files.images.map(file => file.path);
-                // If the user is also sending existing images (as a string or array)
-                let existingImages = [];
-                if (carData.existingImages) {
-                    try {
-                        existingImages = typeof carData.existingImages === 'string'
-                            ? JSON.parse(carData.existingImages)
-                            : carData.existingImages;
-                    } catch (e) {
-                        existingImages = carData.existingImages.split(',').map(img => img.trim());
-                    }
-                } else if (!req.files.images && car.images) {
-                    // Fallback to current images if no new images and no explicit existingImages
-                    existingImages = car.images;
-                }
-
                 carData.images = [...existingImages, ...newImages];
+            } else {
+                carData.images = existingImages;
             }
+        } else if (carData.existingImages || carData.images) {
+            // Handle case where body has existingImages or images but no files
+            carData.images = existingImages;
         }
 
-        // Handle case where images are passed as a JSON string in req.body without new uploads
+        // Final safety check: if 'images' is still a string in carData, parse it
         if (typeof carData.images === 'string') {
             try {
                 carData.images = JSON.parse(carData.images);

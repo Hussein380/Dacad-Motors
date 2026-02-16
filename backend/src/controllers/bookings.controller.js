@@ -57,7 +57,7 @@ exports.createBooking = async (req, res) => {
 
         // 4. Send emails (await on Vercel to prevent premature function termination)
         const emailPromises = [];
-        
+
         // Send "received" email to client
         emailPromises.push(
             addEmailJob('booking-received', {
@@ -109,9 +109,9 @@ exports.getBookings = async (req, res) => {
 
         // Admin sees all, user sees only theirs
         if (req.user.role === 'admin') {
-            query = Booking.find().populate('car', 'name brand model imageUrl pricePerDay');
+            query = Booking.find().populate('car', 'name brand model imageUrl rentPrice');
         } else {
-            query = Booking.find({ user: req.user._id }).populate('car', 'name brand model imageUrl pricePerDay');
+            query = Booking.find({ user: req.user._id }).populate('car', 'name brand model imageUrl rentPrice');
         }
 
         const bookings = await query.sort('-createdAt');
@@ -224,7 +224,7 @@ exports.getBookingExtras = async (req, res) => {
 exports.getUnavailableDates = async (req, res) => {
     try {
         const { id: carId } = req.params;
-        
+
         // Get all active bookings for this car (pending, confirmed, active)
         const bookings = await Booking.find({
             car: carId,

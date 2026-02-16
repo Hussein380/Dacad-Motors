@@ -23,11 +23,9 @@ api/.env
 
 # Backend dev / test artifacts (do not push)
 backend/seeds/
-backend/seed-*.js
+backend/scripts/
+backend/seed*.js
 backend/tests/
-backend/scripts/test-*.js
-backend/scripts/debug-*.js
-backend/test-*.js
 backend/test_*.js
 backend/verify-*.js
 backend/*.txt

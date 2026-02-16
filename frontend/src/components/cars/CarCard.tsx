@@ -89,11 +89,12 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
               </div>
             </div>
 
-            {/* Price & CTA */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50">
               <div>
-                <span className="text-2xl font-display font-bold">{formatPrice(car.pricePerDay)}</span>
-                <span className="text-sm text-muted-foreground">/day</span>
+                <span className="text-2xl font-display font-bold">
+                  {car.salePrice ? formatPrice(car.salePrice) : formatPrice(car.rentPrice)}
+                </span>
+                {!car.salePrice && <span className="text-sm text-muted-foreground">/day</span>}
               </div>
               <Button
                 size="sm"

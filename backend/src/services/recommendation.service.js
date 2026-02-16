@@ -179,7 +179,7 @@ const getFleetContext = async () => {
             Car.distinct('category'),
             Car.aggregate([
                 { $match: { available: true } },
-                { $group: { _id: null, minPrice: { $min: '$pricePerDay' }, maxPrice: { $max: '$pricePerDay' } } }
+                { $group: { _id: null, minPrice: { $min: '$rentPrice' }, maxPrice: { $max: '$rentPrice' } } }
             ]),
             // Get 2 sample cars for EACH category
             Car.aggregate([
@@ -188,7 +188,7 @@ const getFleetContext = async () => {
                 {
                     $group: {
                         _id: '$category',
-                        samples: { $push: { name: '$name', brand: '$brand', model: '$model', price: '$pricePerDay' } }
+                        samples: { $push: { name: '$name', brand: '$brand', model: '$model', price: '$rentPrice' } }
                     }
                 },
                 {
@@ -278,7 +278,7 @@ async function executeCheckAvailability({ query, pickupDate, returnDate }) {
                 { model: searchRegex },
                 { category: searchRegex }
             ]
-        }).select('name brand model category pricePerDay imageUrl');
+        }).select('name brand model category rentPrice imageUrl');
 
         if (candidateCars.length === 0) {
             return {
@@ -309,7 +309,7 @@ async function executeCheckAvailability({ query, pickupDate, returnDate }) {
             count: availableCars.length,
             cars: availableCars.slice(0, 3).map(c => ({
                 name: c.name,
-                price: c.pricePerDay,
+                price: c.rentPrice,
                 category: c.category
             }))
         };

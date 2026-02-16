@@ -14,7 +14,10 @@ import {
   Trash2,
   Check,
   X,
-  Clock
+  Clock,
+  MessageSquare,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { formatPrice } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
@@ -32,21 +35,21 @@ import { Layout } from '@/components/common/Layout';
 import { LazyImage } from '@/components/common/LazyImage';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getCars, deleteCar } from '@/services/carService';
-import { getBookings, updateBookingStatus, cancelBooking } from '@/services/bookingService';
+import { getInquiries, updateInquiry } from '@/services/inquiryService';
 import { AdminCarModal } from '@/components/admin/AdminCarModal';
-import type { Car as CarType, Booking } from '@/types';
+import type { Car as CarType, Inquiry } from '@/types';
 
-const statusConfig: Record<Booking['status'], { label: string; color: string; icon: typeof Check }> = {
-  pending: { label: 'Pending', color: 'bg-warning/10 text-warning', icon: Clock },
-  confirmed: { label: 'Confirmed', color: 'bg-accent/10 text-accent', icon: Check },
-  active: { label: 'Active', color: 'bg-success/10 text-success', icon: TrendingUp },
-  completed: { label: 'Completed', color: 'bg-muted text-muted-foreground', icon: Check },
-  cancelled: { label: 'Cancelled', color: 'bg-destructive/10 text-destructive', icon: X },
+const statusConfig: Record<Inquiry['status'], { label: string; color: string; icon: any }> = {
+  New: { label: 'New', color: 'bg-warning/10 text-warning', icon: Clock },
+  Contacted: { label: 'Contacted', color: 'bg-accent/10 text-accent', icon: MessageSquare },
+  Scheduled: { label: 'Scheduled', color: 'bg-success/10 text-success', icon: CalendarDays },
+  Sold: { label: 'Sold', color: 'bg-success text-success-foreground', icon: ShieldCheck },
+  Closed: { label: 'Closed', color: 'bg-muted text-muted-foreground', icon: X },
 };
 
 export default function Admin() {
   const [cars, setCars] = useState<CarType[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCars, setIsLoadingCars] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,14 +63,14 @@ export default function Admin() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [carsData, bookingsData] = await Promise.all([
-        getCars({ limit: 24, page: 1 } as any),
-        getBookings(),
+      const [carsData, inquiriesData] = await Promise.all([
+        getCars({ limit: 100, page: 1 } as any),
+        getInquiries(),
       ]);
       setCars(carsData.cars);
       setCarTotal(carsData.total);
       setCarPage(1);
-      setBookings(bookingsData.bookings);
+      setInquiries(inquiriesData);
     } finally {
       setIsLoading(false);
     }
@@ -108,19 +111,10 @@ export default function Admin() {
     }
   };
 
-  const handleConfirmBooking = async (id: string) => {
-    const updated = await updateBookingStatus(id, 'confirmed');
+  const handleUpdateInquiryStatus = async (id: string, status: Inquiry['status']) => {
+    const updated = await updateInquiry(id, { status });
     if (updated) {
       loadData();
-    }
-  };
-
-  const handleCancelBooking = async (id: string) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      const success = await cancelBooking(id);
-      if (success) {
-        loadData();
-      }
     }
   };
 
@@ -132,20 +126,20 @@ export default function Admin() {
       change: '+2 this month',
     },
     {
-      label: 'Active Bookings',
-      value: bookings.filter(b => b.status === 'active' || b.status === 'confirmed').length,
-      icon: CalendarDays,
-      change: '+12% from last week',
+      label: 'Active Inquiries',
+      value: inquiries.filter(i => i.status !== 'Closed' && i.status !== 'Sold').length,
+      icon: MessageSquare,
+      change: '+12 new leads',
     },
     {
-      label: 'Revenue',
-      value: formatPrice(bookings.reduce((sum, b) => sum + b.totalPrice, 0)),
+      label: 'Inventory Value',
+      value: formatPrice(cars.reduce((sum, c) => sum + (c.salePrice || 0), 0)),
       icon: DollarSign,
       change: '+8% from last month',
     },
     {
-      label: 'Customers',
-      value: new Set(bookings.map(b => b.customerEmail)).size,
+      label: 'Potential Customers',
+      value: new Set(inquiries.map(i => i.email)).size,
       icon: Users,
       change: '+5 new customers',
     },
@@ -156,10 +150,10 @@ export default function Admin() {
     car.brand.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredBookings = bookings.filter(booking =>
-    booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.carName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.id.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredInquiries = inquiries.filter(inquiry =>
+    inquiry.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inquiry.carName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inquiry.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -173,7 +167,7 @@ export default function Admin() {
         >
           <div>
             <h1 className="font-display text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage your fleet and bookings</p>
+            <p className="text-muted-foreground">Manage your inventory and inquiries</p>
           </div>
           <Button
             className="gradient-accent text-accent-foreground border-0"
@@ -212,7 +206,7 @@ export default function Admin() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search cars, bookings, customers..."
+              placeholder="Search cars, inquiries, customers..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -221,24 +215,23 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="bookings" className="space-y-6">
+        <Tabs defaultValue="inquiries" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="cars">Cars</TabsTrigger>
+            <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
+            <TabsTrigger value="cars">Inventory</TabsTrigger>
           </TabsList>
 
-          {/* Bookings Tab */}
-          <TabsContent value="bookings">
+          {/* Inquiries Tab */}
+          <TabsContent value="inquiries">
             <Card>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left p-4 font-medium text-muted-foreground">Booking</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Inquiry</th>
                       <th className="text-left p-4 font-medium text-muted-foreground hidden md:table-cell">Customer</th>
-                      <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Dates</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Type</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-                      <th className="text-left p-4 font-medium text-muted-foreground">Total</th>
                       <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
@@ -251,53 +244,44 @@ export default function Admin() {
                           </td>
                         </tr>
                       ))
-                    ) : filteredBookings.length === 0 ? (
+                    ) : filteredInquiries.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                          No bookings found
+                        <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                          No inquiries found
                         </td>
                       </tr>
                     ) : (
-                      filteredBookings.map((booking) => {
-                        const statusInfo = statusConfig[booking.status];
+                      filteredInquiries.map((inquiry) => {
+                        const statusInfo = statusConfig[inquiry.status];
                         return (
                           <motion.tr
-                            key={booking.id}
+                            key={inquiry.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="border-b border-border hover:bg-secondary/50 transition-colors"
                           >
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <LazyImage
-                                  src={booking.carImage}
-                                  alt={booking.carName}
-                                  className="w-12 h-8 object-cover rounded"
-                                  wrapperClassName="flex-shrink-0"
-                                />
                                 <div>
-                                  <p className="font-medium">{booking.id}</p>
-                                  <p className="text-sm text-muted-foreground">{booking.carName}</p>
+                                  <p className="font-medium text-xs text-muted-foreground">{inquiry.id}</p>
+                                  <p className="font-medium">{inquiry.carName}</p>
                                 </div>
                               </div>
                             </td>
                             <td className="p-4 hidden md:table-cell">
-                              <p className="text-sm">{booking.customerName}</p>
-                              <p className="text-xs text-muted-foreground">{booking.customerEmail}</p>
+                              <p className="text-sm">{inquiry.customerName}</p>
+                              <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+                              <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
                             </td>
                             <td className="p-4 hidden lg:table-cell">
-                              <p className="text-sm">
-                                {new Date(booking.pickupDate).toLocaleDateString()} -{' '}
-                                {new Date(booking.returnDate).toLocaleDateString()}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{booking.totalDays} days</p>
+                              <Badge variant="outline">{inquiry.type}</Badge>
                             </td>
                             <td className="p-4">
                               <Badge className={statusInfo.color} variant="secondary">
+                                <statusInfo.icon className="w-3 h-3 mr-1" />
                                 {statusInfo.label}
                               </Badge>
                             </td>
-                            <td className="p-4 font-semibold">{formatPrice(booking.totalPrice)}</td>
                             <td className="p-4 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -308,17 +292,21 @@ export default function Admin() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem>
                                     <Eye className="w-4 h-4 mr-2" />
-                                    View Details
+                                    View Message
                                   </DropdownMenuItem>
-                                  {booking.status === 'pending' && (
-                                    <DropdownMenuItem onClick={() => handleConfirmBooking(booking.id)}>
-                                      <Check className="w-4 h-4 mr-2" />
-                                      Confirm Booking
+                                  {inquiry.status === 'New' && (
+                                    <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
+                                      <MessageSquare className="w-4 h-4 mr-2" />
+                                      Mark Contacted
                                     </DropdownMenuItem>
                                   )}
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleCancelBooking(booking.id)}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Cancel
+                                  <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
+                                    <ShieldCheck className="w-4 h-4 mr-2" />
+                                    Mark as SOLD
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
+                                    <X className="w-4 h-4 mr-2" />
+                                    Close
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -375,9 +363,15 @@ export default function Admin() {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <h3 className="font-display font-semibold">{car.name}</h3>
-                            <p className="text-sm text-muted-foreground capitalize">{car.category}</p>
+                            <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                              <span className="capitalize">{car.category}</span>
+                              <span>•</span>
+                              <span>{car.mileage?.toLocaleString()} km</span>
+                              <span>•</span>
+                              <span>{car.condition}</span>
+                            </div>
                           </div>
-                          <p className="font-bold text-accent">{formatPrice(car.pricePerDay)}/day</p>
+                          <p className="font-bold text-accent">{formatPrice(car.salePrice || 0)}</p>
                         </div>
                         <div className="flex gap-2 mt-4">
                           <Button

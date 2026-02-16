@@ -21,7 +21,7 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
   const [locations, setLocations] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [years, setYears] = useState<number[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 20000000]);
 
   useEffect(() => {
     const loadFiltersData = async () => {
@@ -55,7 +55,7 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
     onFilterChange({
       ...filters,
       priceMin: values[0] > 0 ? values[0] : undefined,
-      priceMax: values[1] < 500 ? values[1] : undefined,
+      priceMax: values[1] < 20000000 ? values[1] : undefined,
     });
   };
 
@@ -95,7 +95,7 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
   };
 
   const clearFilters = () => {
-    setPriceRange([0, 500]);
+    setPriceRange([0, 20000000]);
     onFilterChange({});
   };
 
@@ -170,14 +170,14 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
                 <div className="flex justify-between mb-3">
                   <Label className="text-sm font-medium">Price Range</Label>
                   <span className="text-sm text-muted-foreground">
-                    KES {priceRange[0].toLocaleString()} - KES {priceRange[1].toLocaleString()}+/day
+                    KES {priceRange[0].toLocaleString()} - KES {priceRange[1].toLocaleString()}+
                   </span>
                 </div>
                 <Slider
                   value={priceRange}
                   onValueChange={handlePriceChange}
-                  max={500}
-                  step={10}
+                  max={20000000}
+                  step={100000}
                   className="w-full"
                 />
               </div>

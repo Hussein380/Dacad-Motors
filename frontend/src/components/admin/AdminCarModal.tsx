@@ -21,13 +21,17 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
         brand: '',
         model: '',
         year: new Date().getFullYear(),
-        category: 'economy',
-        pricePerDay: '',
+        category: 'suv',
+        rentPrice: '0',
+        salePrice: '',
+        mileage: '',
+        condition: 'Used',
+        listingType: 'Sale',
         description: '',
         transmission: 'automatic',
         fuelType: 'petrol',
         seats: 5,
-        location: '',
+        location: 'Nairobi',
         features: '',
         available: true,
         isFeatured: false,
@@ -95,7 +99,11 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 model: car.model,
                 year: car.year,
                 category: car.category,
-                pricePerDay: car.pricePerDay.toString(),
+                rentPrice: car.rentPrice.toString(),
+                salePrice: (car as any).salePrice?.toString() || '',
+                mileage: (car as any).mileage?.toString() || '',
+                condition: (car as any).condition || 'Used',
+                listingType: (car as any).listingType || 'Sale',
                 description: car.description,
                 transmission: car.transmission,
                 fuelType: car.fuelType,
@@ -116,13 +124,17 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 brand: '',
                 model: '',
                 year: new Date().getFullYear(),
-                category: categories[0]?.id || 'economy',
-                pricePerDay: '',
+                category: categories[0]?.id || 'suv',
+                rentPrice: '0',
+                salePrice: '',
+                mileage: '',
+                condition: 'Used',
+                listingType: 'Sale',
                 description: '',
                 transmission: 'automatic',
                 fuelType: 'petrol',
                 seats: 5,
-                location: '',
+                location: 'Nairobi',
                 features: '',
                 available: true,
                 isFeatured: false,
@@ -390,14 +402,60 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Price Per Day (KES)</label>
+                                    <label className="text-sm font-medium">Rent Price (Optional) (KES)</label>
                                     <Input
                                         type="number"
                                         placeholder="e.g. 5000"
-                                        value={formData.pricePerDay}
-                                        onChange={(e) => setFormData({ ...formData, pricePerDay: e.target.value })}
+                                        value={formData.rentPrice}
+                                        onChange={(e) => setFormData({ ...formData, rentPrice: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Asking Price (Sale) (KES)</label>
+                                    <Input
+                                        type="number"
+                                        placeholder="e.g. 2500000"
+                                        value={formData.salePrice}
+                                        onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
                                         required
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Mileage (km)</label>
+                                    <Input
+                                        type="number"
+                                        placeholder="e.g. 45000"
+                                        value={formData.mileage}
+                                        onChange={(e) => setFormData({ ...formData, mileage: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Condition</label>
+                                    <select
+                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        value={formData.condition}
+                                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                                    >
+                                        <option value="New">New</option>
+                                        <option value="Used">Used</option>
+                                        <option value="Certified Pre-Owned">Certified Pre-Owned</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Listing Status</label>
+                                    <select
+                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        value={formData.available ? 'available' : 'sold'}
+                                        onChange={(e) => setFormData({ ...formData, available: e.target.value === 'available' })}
+                                    >
+                                        <option value="available">For Sale</option>
+                                        <option value="sold">Sold</option>
+                                    </select>
                                 </div>
 
                                 <div className="space-y-2">
@@ -475,7 +533,7 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                             className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
                                         />
                                         <label htmlFor="available" className="text-sm font-medium cursor-pointer">
-                                            Available for Rent
+                                            Currently For Sale
                                         </label>
                                     </div>
                                     <div className="flex items-center gap-2">

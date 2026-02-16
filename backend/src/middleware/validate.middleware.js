@@ -14,6 +14,17 @@ const validate = (schema, source = 'body') => {
         });
 
         if (error) {
+            console.error('=== VALIDATION ERROR ===');
+            console.error('Schema:', schema.describe());
+            console.error('Request data:', JSON.stringify(req[source], null, 2));
+            console.error('Validation errors:');
+            error.details.forEach((detail, index) => {
+                console.error(`  ${index + 1}. Field: ${detail.path.join('.')}`);
+                console.error(`     Message: ${detail.message}`);
+                console.error(`     Type: ${detail.type}`);
+            });
+            console.error('========================');
+
             const errorMessage = error.details
                 .map((detail) => detail.message.replace(/['"]/g, ''))
                 .join(', ');
