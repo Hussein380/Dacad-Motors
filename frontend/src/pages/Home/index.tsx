@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Calendar, ArrowRight, Sparkles, Shield, Clock, Star } from 'lucide-react';
+import { Search, MapPin, Calendar, ArrowRight, Sparkles, Shield, Clock, Star, Car, Banknote, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Layout } from '@/components/common/Layout';
 import { CarCard } from '@/components/cars/CarCard';
 import { CarCardSkeleton } from '@/components/common/Skeleton';
@@ -17,6 +24,8 @@ export default function Home() {
   const [categories, setCategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [recommendations, setRecommendations] = useState<{ car: Car; reason: string; tags: string[] }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     const loadData = async () => {
@@ -102,28 +111,40 @@ export default function Home() {
               </div>
 
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Drive Your Dreams,{' '}
-                <span className="text-gradient">Any Day</span>
+                Own Your Dream,{' '}
+                <span className="text-gradient">Drive Your Passion</span>
               </h1>
 
               <p className="text-base sm:text-lg text-primary-foreground/80 max-w-lg">
-                Explore our premium fleet of vehicles. From eco-friendly electrics to luxury sports cars, find your perfect ride.
+                Discover your next car from our curated collection of premium vehicles. We bring quality, trust, and excellence to every sale.
               </p>
 
               {/* Search Form */}
               <div className="bg-card text-card-foreground rounded-2xl p-4 shadow-xl space-y-4 max-w-xl">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input placeholder="Location" className="pl-10 h-12" />
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input type="date" className="pl-10 h-12" />
-                  </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input type="date" className="pl-10 h-12" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Brand or Model"
+                      className="pl-10 h-12"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
                 </div>
                 <Button
@@ -131,9 +152,9 @@ export default function Home() {
                   size="lg"
                   className="w-full gradient-accent text-accent-foreground border-0 shadow-accent h-12"
                 >
-                  <Link to="/cars">
+                  <Link to={`/cars?category=${selectedCategory !== 'all' ? selectedCategory : ''}&search=${searchQuery}`}>
                     <Search className="w-5 h-5 mr-2" />
-                    Search Available Cars
+                    Find Your Car
                   </Link>
                 </Button>
               </div>
@@ -183,9 +204,9 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Shield, title: 'Fully Insured', desc: 'Comprehensive coverage included' },
-              { icon: Clock, title: '24/7 Support', desc: 'Always here when you need us' },
-              { icon: MapPin, title: 'Flexible Pickup', desc: 'Multiple convenient locations' },
+              { icon: Shield, title: 'Certified Quality', desc: 'Pre-inspected premium vehicles' },
+              { icon: Banknote, title: 'Easy Financing', desc: 'Tailored payment plans for you' },
+              { icon: Headphones, title: 'Expert Support', desc: 'Guidance through every step' },
             ].map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -347,10 +368,10 @@ export default function Home() {
             className="max-w-2xl mx-auto space-y-6"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Ready to Hit the Road?
+              Ready to Own Your Next Car?
             </h2>
             <p className="text-primary-foreground/80">
-              Book your dream car today and experience the freedom of the open road.
+              Browse our exclusive collection and book a test drive today.
             </p>
             <Button
               asChild
