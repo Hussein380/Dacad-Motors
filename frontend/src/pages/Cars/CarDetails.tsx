@@ -236,14 +236,10 @@ export default function CarDetails() {
               {/* Price Card */}
               <Card className="p-6 text-center gradient-hero text-primary-foreground">
                 <p className="text-sm text-primary-foreground/70">
-                  {car.listingType === 'Sale' ? 'Asking Price' : 'Starting from'}
+                  Asking Price
                 </p>
                 <p className="font-display text-4xl font-bold">
-                  {car.listingType === 'Sale'
-                    ? formatPrice(car.salePrice || 0)
-                    : formatPrice(car.rentPrice)
-                  }
-                  {car.listingType !== 'Sale' && <span className="text-lg font-normal">/day</span>}
+                  {formatPrice(car.salePrice || 0)}
                 </p>
               </Card>
 
@@ -251,10 +247,7 @@ export default function CarDetails() {
               <div className="space-y-4">
                 <a
                   href={`https://wa.me/254722344116?text=${encodeURIComponent(
-                    `Hi, I'm interested in the ${car.brand} ${car.model} (${car.year}) priced at ${car.listingType === 'Sale'
-                      ? formatPrice(car.salePrice || 0)
-                      : formatPrice(car.rentPrice)
-                    }${car.listingType !== 'Sale' ? '/day' : ''}. Is it still available?`
+                    `Hi, I'm interested in the ${car.brand} ${car.model} (${car.year}) priced at ${formatPrice(car.salePrice || 0)}. Is it still available?`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -275,15 +268,12 @@ export default function CarDetails() {
                   </Button>
                 </a>
 
-                {car.listingType === 'Sale' ? (
-                  <InquiryForm car={car} />
-                ) : car.available ? (
-                  <BookingForm car={car} />
-                ) : (
+                <InquiryForm car={car} />
+                {!car.available && (
                   <Card className="p-6 text-center">
-                    <h3 className="font-display font-semibold mb-2">Currently Unavailable</h3>
+                    <h3 className="font-display font-semibold mb-2">Sold Out</h3>
                     <p className="text-muted-foreground text-sm mb-4">
-                      This car is not available at the moment.
+                      This unit has already been sold.
                     </p>
                     <Button asChild variant="outline" className="w-full">
                       <Link to="/cars">Browse Other Cars</Link>

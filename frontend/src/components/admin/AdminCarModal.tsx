@@ -22,7 +22,6 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
         model: '',
         year: new Date().getFullYear(),
         category: 'suv',
-        rentPrice: '0',
         salePrice: '',
         mileage: '',
         condition: 'Used',
@@ -99,11 +98,10 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 model: car.model,
                 year: car.year,
                 category: car.category,
-                rentPrice: car.rentPrice.toString(),
                 salePrice: (car as any).salePrice?.toString() || '',
                 mileage: (car as any).mileage?.toString() || '',
                 condition: (car as any).condition || 'Used',
-                listingType: (car as any).listingType || 'Sale',
+                listingType: 'Sale',
                 description: car.description,
                 transmission: car.transmission,
                 fuelType: car.fuelType,
@@ -125,7 +123,6 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                 model: '',
                 year: new Date().getFullYear(),
                 category: categories[0]?.id || 'suv',
-                rentPrice: '0',
                 salePrice: '',
                 mileage: '',
                 condition: 'Used',
@@ -402,17 +399,7 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Rent Price (Optional) (KES)</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="e.g. 5000"
-                                        value={formData.rentPrice}
-                                        onChange={(e) => setFormData({ ...formData, rentPrice: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Asking Price (Sale) (KES)</label>
+                                    <label className="text-sm font-medium">Asking Price (KES)</label>
                                     <Input
                                         type="number"
                                         placeholder="e.g. 2500000"
@@ -447,13 +434,13 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Listing Status</label>
+                                    <label className="text-sm font-medium">Stock Status</label>
                                     <select
                                         className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         value={formData.available ? 'available' : 'sold'}
                                         onChange={(e) => setFormData({ ...formData, available: e.target.value === 'available' })}
                                     >
-                                        <option value="available">For Sale</option>
+                                        <option value="available">In Stock</option>
                                         <option value="sold">Sold</option>
                                     </select>
                                 </div>

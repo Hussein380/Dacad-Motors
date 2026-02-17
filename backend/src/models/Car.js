@@ -9,11 +9,13 @@ const carSchema = new mongoose.Schema({
     },
     brand: {
         type: String,
-        required: [true, 'Please add a brand']
+        required: [true, 'Please add a brand'],
+        trim: true
     },
     model: {
         type: String,
-        required: [true, 'Please add a model']
+        required: [true, 'Please add a model'],
+        trim: true
     },
     year: {
         type: Number,
@@ -28,7 +30,7 @@ const carSchema = new mongoose.Schema({
     },
     rentPrice: {
         type: Number,
-        required: false, // Optional, only for cars for rent
+        required: false,
         default: 0
     },
     imageUrl: {
@@ -91,7 +93,8 @@ const carSchema = new mongoose.Schema({
     },
     salePrice: {
         type: Number,
-        required: false // Optional, only for cars for sale
+        required: true,
+        default: 0
     },
     mileage: {
         type: Number,
@@ -105,7 +108,7 @@ const carSchema = new mongoose.Schema({
     listingType: {
         type: String,
         enum: ['Rent', 'Sale', 'Both'],
-        default: 'Rent' // Default to Rent to preserve existing behavior
+        default: 'Sale'
     },
     previousOwners: {
         type: Number,
@@ -118,6 +121,28 @@ const carSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    }
+});
+
+// Helper function to title case strings
+const titleCase = (str) => {
+    if (!str) return str;
+    return str.trim()
+        .toLowerCase()
+        .replace(/(^|\s|-)\S/g, (match) => match.toUpperCase());
+};
+
+// Pre-save hook for data normalization
+carSchema.pre('save', async function () {
+    if (this.brand) {
+        this.brand = titleCase(this.brand);
+    }
+    if (this.model) {
+        this.model = titleCase(this.model);
+    }
+    // Update the name if it's missing or if brand/model changed
+    if (this.isModified('brand') || this.isModified('model') || !this.name) {
+        this.name = `${this.brand} ${this.model}`;
     }
 });
 

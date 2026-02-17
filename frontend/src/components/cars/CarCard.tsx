@@ -92,15 +92,13 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
             <div className="flex items-center justify-between pt-2 border-t border-border/50">
               <div>
                 <span className="text-2xl font-display font-bold">
-                  {car.salePrice ? formatPrice(car.salePrice) : formatPrice(car.rentPrice)}
+                  {formatPrice(car.salePrice || 0)}
                 </span>
-                {!car.salePrice && <span className="text-sm text-muted-foreground">/day</span>}
               </div>
               <div className="flex gap-2">
                 <a
                   href={`https://wa.me/254722344116?text=${encodeURIComponent(
-                    `Hi, I'm interested in the ${car.brand} ${car.model} (${car.year}) priced at ${car.salePrice ? formatPrice(car.salePrice) : formatPrice(car.rentPrice)
-                    }${!car.salePrice ? '/day' : ''}. Is it still available?`
+                    `Hi, I'm interested in the ${car.brand} ${car.model} (${car.year}) priced at ${formatPrice(car.salePrice || 0)}. Is it still available?`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

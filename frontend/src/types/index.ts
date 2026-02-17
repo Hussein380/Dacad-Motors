@@ -6,7 +6,6 @@ export interface Car {
     model: string;
     year: number;
     category: string;
-    rentPrice: number;
     currency: string;
     imageUrl: string;
     images: string[];
