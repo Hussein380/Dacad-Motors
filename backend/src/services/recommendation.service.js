@@ -162,12 +162,12 @@ function shuffleArray(array) {
 
 /** Contact and company info for AI context (single source of truth) */
 const CONTACT_CONTEXT = {
-    companyName: 'Sol Travel Group',
+    companyName: 'Dacad Motors',
     location: 'Nairobi, Kenya',
-    phone: '+254 722 235 748',
-    phoneRaw: '254722235748',
-    email: 'soltravelgroupltd@gmail.com',
-    whatsappLink: 'https://wa.me/254722235748',
+    phone: '0722344116',
+    phoneRaw: '254722344116',
+    email: 'info@dacadmotors.com',
+    whatsappLink: 'https://wa.me/254722344116',
 };
 
 /**
@@ -179,7 +179,7 @@ const getFleetContext = async () => {
             Car.distinct('category'),
             Car.aggregate([
                 { $match: { available: true } },
-                { $group: { _id: null, minPrice: { $min: '$rentPrice' }, maxPrice: { $max: '$rentPrice' } } }
+                { $group: { _id: null, minPrice: { $min: '$salePrice' }, maxPrice: { $max: '$salePrice' } } }
             ]),
             // Get 2 sample cars for EACH category
             Car.aggregate([
@@ -188,7 +188,7 @@ const getFleetContext = async () => {
                 {
                     $group: {
                         _id: '$category',
-                        samples: { $push: { name: '$name', brand: '$brand', model: '$model', price: '$rentPrice' } }
+                        samples: { $push: { name: '$name', brand: '$brand', model: '$model', price: '$salePrice', type: '$listingType' } }
                     }
                 },
                 {
@@ -201,18 +201,18 @@ const getFleetContext = async () => {
         ]);
 
         const locationNames = NAIROBI_LOCATIONS.join(', ');
-        const minPrice = priceStats[0] ? priceStats[0].minPrice : 3200;
+        const minPrice = priceStats[0] ? priceStats[0].minPrice : 500000;
         const maxPrice = priceStats[0] ? priceStats[0].maxPrice : 'any';
 
-        // Create a better summary: "Category: Car 1, Car 2"
+        // Create a better summary: "Category: Car 1 (Sale), Car 2 (Rent)"
         const carSummary = carsByCategory.map(cat =>
-            `${cat.category.toUpperCase()}: ${cat.samples.map(s => `${s.brand} ${s.model} ($${s.price})`).join(', ')}`
+            `${cat.category.toUpperCase()}: ${cat.samples.map(s => `${s.brand} ${s.model} (${s.type}: KES ${s.price?.toLocaleString()})`).join(', ')}`
         ).join(' | ');
 
         return {
             categories: categories.join(', '),
             locations: locationNames,
-            priceRange: `KES ${minPrice} - ${maxPrice} per day`,
+            priceRange: `KES ${minPrice?.toLocaleString()} - ${maxPrice === 'any' ? 'any' : maxPrice?.toLocaleString()}`,
             availableCars: carSummary,
             ...CONTACT_CONTEXT
         };
@@ -230,7 +230,7 @@ const tools = [
         functionDeclarations: [
             {
                 name: "check_availability",
-                description: "Check if a specific car or category is available for a given date range. ALWAYS use this tool when the user asks about availability for specific dates.",
+                description: "Check if a specific car or category is available for sale or rent. ALWAYS use this tool when the user asks about specific car availability.",
                 parameters: {
                     type: "OBJECT",
                     properties: {
@@ -238,16 +238,13 @@ const tools = [
                             type: "STRING",
                             description: "The car name (e.g. 'Toyota Prado'), brand (e.g. 'Toyota'), or category (e.g. 'SUV', 'Sedan') the user is looking for."
                         },
-                        pickupDate: {
+                        intent: {
                             type: "STRING",
-                            description: "The pickup date in ISO 8601 format (YYYY-MM-DD)."
-                        },
-                        returnDate: {
-                            type: "STRING",
-                            description: "The return date in ISO 8601 format (YYYY-MM-DD)."
+                            enum: ["sale", "rent"],
+                            description: "Whether the user wants to buy or rent the car."
                         }
                     },
-                    required: ["query", "pickupDate", "returnDate"]
+                    required: ["query"]
                 }
             }
         ]
@@ -257,59 +254,40 @@ const tools = [
 /**
  * Execute the check_availability tool
  */
-async function executeCheckAvailability({ query, pickupDate, returnDate }) {
-    console.log(`🛠️ Tool Execution: check_availability('${query}', ${pickupDate}, ${returnDate})`);
+async function executeCheckAvailability({ query, intent = 'sale' }) {
+    console.log(`🛠️ Tool Execution: check_availability('${query}', intent='${intent}')`);
 
     try {
-        const pDate = new Date(pickupDate);
-        const rDate = new Date(returnDate);
-
-        if (isNaN(pDate.getTime()) || isNaN(rDate.getTime())) {
-            return { error: "Invalid date format. Please use YYYY-MM-DD." };
-        }
-
         // 1. Find candidate cars based on the query (name, brand, or category)
         const searchRegex = new RegExp(query, 'i');
+        const listingMatch = intent === 'sale' ? { $in: ['Sale', 'Both'] } : { $in: ['Rent', 'Both'] };
+
         const candidateCars = await Car.find({
             available: true,
+            listingType: listingMatch,
             $or: [
                 { name: searchRegex },
                 { brand: searchRegex },
                 { model: searchRegex },
                 { category: searchRegex }
             ]
-        }).select('name brand model category rentPrice imageUrl');
+        }).select('name brand model category rentPrice salePrice listingType imageUrl');
 
         if (candidateCars.length === 0) {
             return {
                 available: false,
-                message: `No cars found matching "${query}". We have: SUV, Sedan, Economy, Luxury.`
-            };
-        }
-
-        // 2. Check overlap for each candidate
-        const availableCars = [];
-        for (const car of candidateCars) {
-            const isAvailable = await bookingService.checkCarAvailability(car._id, pDate, rDate);
-            if (isAvailable) {
-                availableCars.push(car);
-            }
-        }
-
-        if (availableCars.length === 0) {
-            return {
-                available: false,
-                message: `Sorry, all our ${query}s are fully booked for those dates.`
+                message: `No cars found matching "${query}" for ${intent}. We have various SUVs, Sedans, and Luxury cars for sale.`
             };
         }
 
         // 3. Return top 3 matches
         return {
             available: true,
-            count: availableCars.length,
-            cars: availableCars.slice(0, 3).map(c => ({
+            count: candidateCars.length,
+            cars: candidateCars.slice(0, 3).map(c => ({
                 name: c.name,
-                price: c.rentPrice,
+                price: intent === 'sale' ? c.salePrice : c.rentPrice,
+                type: c.listingType,
                 category: c.category
             }))
         };
@@ -336,29 +314,28 @@ exports.getAIChatResponse = async (userMessage, history = []) => {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1' });
 
-    // Use a model that supports function calling reliably (Flash 2.0 or 1.5 Pro)
     // Use a model that supports function calling reliably
     const models = [
         'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
         'gemini-2.0-flash'
     ];
 
     const systemInstruction = `
-    Identity: You are the Sol Travel AI Assistant, a friendly car rental expert.
+    Identity: You are the Dacad Motors AI Assistant, a professional car sales and premium vehicle expert.
     
-    CAPABILITY: You have access to a tool 'check_availability' that effectively checks the REAL database.
-    - IF the user asks "Is X available on date Y?", you MUST call this tool.
-    - If the user provides a vague date (e.g. "next Friday"), calculate the ISO date (YYYY-MM-DD) yourself based on the current date (${new Date().toISOString().split('T')[0]}) and call the tool.
-    - If the tool returns available cars, present them enthusiastically.
-    - If the tool returns no cars, suggest alternatives from the general fleet info.
+    CAPABILITY: You have access to a tool 'check_availability' that checks our REAL database for sales and rental inventory.
+    - IF the user asks "Do you have a Toyota Prado?" or "Is X available?", you MUST call this tool.
+    - Always prioritize SELLING cars, but mention rentals if the user specifically asks or if the car is available for both.
+    - If the tool returns available cars, present them professionally with their prices and features.
+    - If the tool returns no cars, suggest the closest matches from our general inventory below.
 
     General Context:
-    - Company: ${context?.companyName || 'Sol Travel'}
-    - Fleet Categories: ${context?.categories}
-    - Prices: ${context?.priceRange}
+    - Company: ${context?.companyName || 'Dacad Motors'}
+    - Philosophy: We provide premium vehicles and exceptional service in Kenya.
+    - Fleet Highlights: ${context?.availableCars}
+    - Typical Price Range: ${context?.priceRange}
     - Location: ${context?.locations}
+    - Contact: Phone ${context?.phone}, Email ${context?.email}
     `;
 
     let lastError = null;
@@ -373,7 +350,14 @@ exports.getAIChatResponse = async (userMessage, history = []) => {
                 tools: tools
             });
 
-            const formattedHistory = history.map(msg => ({
+            // Sanitize history: Gemini requires history to start with 'user' role.
+            // If it starts with an assistant message (like a greeting), we skip it for the AI context.
+            let sanitizedHistory = history;
+            if (history.length > 0 && (history[0].role === 'assistant' || history[0].role === 'model')) {
+                sanitizedHistory = history.slice(1);
+            }
+
+            const formattedHistory = sanitizedHistory.map(msg => ({
                 role: msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.content }]
             }));
@@ -412,6 +396,9 @@ exports.getAIChatResponse = async (userMessage, history = []) => {
 
         } catch (error) {
             console.warn(`⚠️ ${modelName} call failed: ${error.message}`);
+            if (error.response && error.response.data) {
+                console.warn('Error details:', JSON.stringify(error.response.data));
+            }
             lastError = error;
         }
     }
@@ -428,10 +415,10 @@ exports.getAIGreeting = async () => {
         throw new Error('GEMINI_API_KEY is not configured in .env');
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const models = ['models/gemini-2.0-flash', 'models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemma-3-1b-it'];
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1' });
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
-    const greetingPrompt = `You are the Sol Travel car rental assistant. The user has just opened the chat. Reply with exactly one short, friendly greeting sentence (e.g. ask how you can help). No markdown, no lists, no extra text. One sentence only.`;
+    const greetingPrompt = `You are the Dacad Motors car sales assistant. The user has just opened the chat. Reply with exactly one short, professional greeting sentence inviting them to explore our premium car inventory. No markdown, no lists, no extra text. One sentence only.`;
 
     let lastError = null;
     for (const modelName of models) {
