@@ -257,7 +257,7 @@ export function CarFilters({ filters, onFilterChange, totalResults }: CarFilters
 
               {/* Location */}
               <div>
-                <Label className="text-sm font-medium mb-3 block">Pickup Location</Label>
+                <Label className="text-sm font-medium mb-3 block">Location</Label>
                 <div className="flex flex-wrap gap-2">
                   {locations.map((loc) => (
                     <Button

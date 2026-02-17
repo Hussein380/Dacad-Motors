@@ -26,7 +26,7 @@ export async function getRecommendations(): Promise<(Recommendation & { car: Car
     return response.data.map((car, index) => ({
       id: `rec-${index}`,
       carId: car._id,
-      reason: "Based on our AI's analysis of your preferences and current fleet availability.",
+      reason: "Based on our AI's analysis of your preferences and our premium sales inventory.",
       tags: [car.category, car.fuelType, car.transmission],
       score: car.rating ? car.rating / 5 : 0.9, // Use real rating if available
       car: mapCar(car)

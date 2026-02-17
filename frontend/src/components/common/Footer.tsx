@@ -13,7 +13,7 @@ export function Footer() {
               <span>Dacad Motors</span>
             </Link>
             <p className="text-sm text-primary-foreground/70">
-              Premium car rental experience with the best vehicles and exceptional service.
+              Premium car sales experience with the best vehicles and exceptional service.
             </p>
             <div className="flex gap-3">
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors">
@@ -59,11 +59,14 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <MapPin className="w-4 h-4" />
-                Nairobi, Kenya
+                Nairobi & Mombasa, Kenya
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <Phone className="w-4 h-4" />
-                <a href="https://wa.me/254722344116" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">0722344116</a>
+                <div className="flex flex-col">
+                  <a href="https://wa.me/254722344116" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">0722344116</a>
+                  <a href="https://wa.me/254728282836" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">0728282836</a>
+                </div>
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <Mail className="w-4 h-4" />

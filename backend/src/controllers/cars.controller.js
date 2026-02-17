@@ -1,6 +1,6 @@
 const Car = require('../models/Car');
 const { sendSuccess, sendError } = require('../utils/response');
-const { NAIROBI_LOCATIONS } = require('../config/locations.config');
+const { LOCATIONS } = require('../config/locations.config');
 const { clearCarCache } = require('../config/redis.config');
 
 // @desc    Get all cars with filters/search
@@ -175,7 +175,7 @@ exports.getYears = async (req, res) => {
 // @access  Public
 exports.getLocations = async (req, res) => {
     try {
-        sendSuccess(res, NAIROBI_LOCATIONS);
+        sendSuccess(res, LOCATIONS);
     } catch (error) {
         sendError(res, error.message, 500);
     }

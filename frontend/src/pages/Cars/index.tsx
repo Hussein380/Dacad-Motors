@@ -84,7 +84,7 @@ export default function Cars() {
         >
           <h1 className="font-display text-3xl md:text-4xl font-bold">Browse Our Fleet</h1>
           <p className="text-muted-foreground mt-2">
-            Find the perfect car for your next adventure
+            Find your dream car from our premium inventory
           </p>
         </motion.div>
 

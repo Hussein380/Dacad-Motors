@@ -1,9 +1,9 @@
 /**
- * Nairobi pickup/return locations
- * Business operates within Nairobi only.
- * Used when admin adds a car (pick location) and when client books (pickup/return).
+ * Kenya pickup/return locations (Nairobi & Mombasa)
+ * Used when admin adds a car (pick location) and when client books.
  */
-const NAIROBI_LOCATIONS = [
+const LOCATIONS = [
+    'Mombasa',
     'Bahati',
     'Buruburu',
     'Dagoretti',
@@ -84,4 +84,4 @@ const NAIROBI_LOCATIONS = [
     'South B'
 ].sort();
 
-module.exports = { NAIROBI_LOCATIONS };
+module.exports = { LOCATIONS };

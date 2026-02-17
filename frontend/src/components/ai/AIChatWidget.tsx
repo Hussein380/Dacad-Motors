@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 const SUGGESTED_QUESTIONS = [
   "What cars are available?",
   "How much does it cost?",
-  "How do I book a car?",
+  "How do I buy a car?",
   "Special safari cars?",
 ];
 

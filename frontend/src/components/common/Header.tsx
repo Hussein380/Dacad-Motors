@@ -65,7 +65,7 @@ export function Header() {
                 </Link>
               </Button>
               <Button size="sm" className="gradient-accent text-accent-foreground border-0 shadow-accent" asChild>
-                <Link to="/cars">Book Now</Link>
+                <Link to="/cars">Browse Cars</Link>
               </Button>
             </>
           )}

@@ -115,7 +115,7 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-sm font-medium">
                 <Sparkles className="w-4 h-4" />
-                Premium Car Rental Experience
+                Premium Car Sales Experience
               </div>
 
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
@@ -276,7 +276,7 @@ export default function Home() {
           <div className="flex justify-between items-end mb-8">
             <div>
               <h2 className="font-display text-3xl font-bold">Browse by Category</h2>
-              <p className="text-muted-foreground mt-1">Find the perfect car for every occasion</p>
+              <p className="text-muted-foreground mt-1">Find your dream car from our premium inventory</p>
             </div>
           </div>
 

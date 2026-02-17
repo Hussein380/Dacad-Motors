@@ -48,7 +48,7 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Load categories and Nairobi locations on mount
+    // Load categories and locations on mount
     useEffect(() => {
         const loadLocations = async () => {
             const locs = await getLocations();
@@ -485,7 +485,7 @@ export function AdminCarModal({ isOpen, onClose, car, onSuccess }: AdminCarModal
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Pickup Location (Nairobi)</label>
+                                    <label className="text-sm font-medium">Location</label>
                                     <LocationAutocomplete
                                         value={formData.location}
                                         onChange={(val) => setFormData({ ...formData, location: val })}

@@ -1,7 +1,7 @@
 const Car = require('../models/Car');
 const Booking = require('../models/Booking');
 const bookingService = require('./booking.service');
-const { NAIROBI_LOCATIONS } = require('../config/locations.config');
+const { LOCATIONS } = require('../config/locations.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
@@ -200,7 +200,7 @@ const getFleetContext = async () => {
             ])
         ]);
 
-        const locationNames = NAIROBI_LOCATIONS.join(', ');
+        const locationNames = LOCATIONS.join(', ');
         const minPrice = priceStats[0] ? priceStats[0].minPrice : 500000;
         const maxPrice = priceStats[0] ? priceStats[0].maxPrice : 'any';
 
