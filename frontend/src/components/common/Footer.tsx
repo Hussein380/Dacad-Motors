@@ -70,7 +70,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/70">
                 <Mail className="w-4 h-4" />
-                <a href="mailto:Barrecali123@gmail.com" className="hover:text-primary-foreground transition-colors">Email</a>
+                <a href="mailto:info@dacadmotors.com" className="hover:text-primary-foreground transition-colors">info@dacadmotors.com</a>
               </li>
             </ul>
           </div>
