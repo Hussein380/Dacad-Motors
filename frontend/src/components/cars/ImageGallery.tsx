@@ -36,12 +36,12 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
     if (!images || images.length === 0) return null;
 
     return (
-        <div className="space-y-4">
-            <Carousel setApi={setApi} className="w-full relative group">
-                <CarouselContent>
+        <div className="space-y-3 sm:space-y-4 w-full min-w-0 overflow-hidden">
+            <Carousel setApi={setApi} className="w-full min-w-0 relative group">
+                <CarouselContent className="min-w-0">
                     {images.map((image, index) => (
                         <CarouselItem key={index}>
-                            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-muted">
+                            <div className="relative aspect-[4/3] sm:aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden bg-muted">
                                 <LazyImage
                                     src={image}
                                     alt={`${alt} - Image ${index + 1}`}
@@ -77,15 +77,16 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                 )}
             </Carousel>
 
-            {/* Thumbnails */}
+            {/* Thumbnails - scrollable on small screens, contained */}
             {images.length > 1 && (
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+                <div className="min-w-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {images.map((image, index) => (
                         <button
                             key={index}
                             onClick={() => scrollTo(index)}
                             className={cn(
-                                "relative flex-shrink-0 w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all",
+                                "relative flex-shrink-0 w-14 sm:w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all snap-start",
                                 current === index + 1 ? "border-accent ring-2 ring-accent/20" : "border-transparent hover:border-accent/40"
                             )}
                         >
@@ -96,6 +97,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                             />
                         </button>
                     ))}
+                    </div>
                 </div>
             )}
         </div>

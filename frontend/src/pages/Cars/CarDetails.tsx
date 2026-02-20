@@ -73,23 +73,23 @@ export default function CarDetails() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6 lg:py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-full">
         {/* Back Button */}
-        <Button variant="ghost" asChild className="mb-6 -ml-2">
+        <Button variant="ghost" asChild className="mb-4 sm:mb-6 -ml-1 sm:-ml-2">
           <Link to="/cars">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Cars
+            <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="truncate">Back to Cars</span>
           </Link>
         </Button>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Left Column - Car Details */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6 min-w-0">
             {/* Car Gallery */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative"
+              className="relative min-w-0"
             >
               <ImageGallery
                 images={car.images && car.images.length > 0 ? car.images : [car.imageUrl]}
@@ -115,17 +115,17 @@ export default function CarDetails() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h1 className="font-display text-3xl md:text-4xl font-bold">{car.name}</h1>
-                  <p className="text-muted-foreground text-lg mt-1">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold break-words">{car.name}</h1>
+                  <p className="text-muted-foreground text-base sm:text-lg mt-1">
                     {car.brand} {car.model} • {car.year}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary">
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-secondary flex-shrink-0">
                   <Star className="w-5 h-5 fill-warning text-warning" />
                   <span className="font-semibold">{car.rating}</span>
-                  <span className="text-muted-foreground">({car.reviewCount} reviews)</span>
+                  <span className="text-muted-foreground text-sm hidden sm:inline">({car.reviewCount} reviews)</span>
                 </div>
               </div>
             </motion.div>
@@ -136,34 +136,34 @@ export default function CarDetails() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className="p-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <Users className="w-5 h-5 text-accent" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Seats</p>
-                      <p className="font-semibold">{car.seats} People</p>
+              <Card className="p-3 sm:p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-secondary/50 min-w-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Seats</p>
+                      <p className="font-semibold text-sm sm:text-base truncate">{car.seats} People</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <Settings2 className="w-5 h-5 text-accent" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Transmission</p>
-                      <p className="font-semibold capitalize">{car.transmission}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-secondary/50 min-w-0">
+                    <Settings2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Transmission</p>
+                      <p className="font-semibold text-sm sm:text-base truncate capitalize">{car.transmission}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <Fuel className="w-5 h-5 text-accent" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Fuel</p>
-                      <p className="font-semibold">{fuelLabels[car.fuelType]}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-secondary/50 min-w-0">
+                    <Fuel className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Fuel</p>
+                      <p className="font-semibold text-sm sm:text-base truncate">{fuelLabels[car.fuelType]}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                    <MapPin className="w-5 h-5 text-accent" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-semibold">{car.location}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-secondary/50 min-w-0">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Location</p>
+                      <p className="font-semibold text-sm sm:text-base truncate">{car.location}</p>
                     </div>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function CarDetails() {
               className="space-y-4"
             >
               <h2 className="font-display text-xl font-semibold">About This Car</h2>
-              <p className="text-muted-foreground leading-relaxed">{car.description}</p>
+              <p className="text-muted-foreground leading-relaxed break-words">{car.description}</p>
             </motion.div>
 
             {/* Features */}
@@ -193,10 +193,10 @@ export default function CarDetails() {
                 {car.features.map((feature) => (
                   <div
                     key={feature}
-                    className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50"
+                    className="flex items-center gap-2 p-2 sm:p-3 rounded-lg bg-secondary/50 min-w-0"
                   >
                     <Check className="w-4 h-4 text-success flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
+                    <span className="text-sm break-words min-w-0 flex-1">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -229,16 +229,15 @@ export default function CarDetails() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2"
+            className="lg:col-span-2 min-w-0"
           >
             <div className="lg:sticky lg:top-24 space-y-4">
               {/* Price Card */}
-              {/* Price Card */}
-              <Card className="p-6 text-center gradient-hero text-primary-foreground">
-                <p className="text-sm text-primary-foreground/70">
+              <Card className="p-4 sm:p-6 text-center gradient-hero text-primary-foreground">
+                <p className="text-xs sm:text-sm text-primary-foreground/70">
                   Asking Price
                 </p>
-                <p className="font-display text-4xl font-bold">
+                <p className="font-display text-2xl sm:text-3xl md:text-4xl font-bold break-words">
                   {formatPrice(car.salePrice || 0)}
                 </p>
               </Card>
