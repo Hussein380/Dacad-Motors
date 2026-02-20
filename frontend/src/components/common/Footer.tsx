@@ -13,7 +13,7 @@ export function Footer() {
               <span>Dacad Motors</span>
             </Link>
             <p className="text-sm text-primary-foreground/70">
-              Premium car sales experience with the best vehicles and exceptional service.
+              Premium car sales — the best vehicles and exceptional service.
             </p>
             <div className="flex gap-3">
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors">

@@ -121,7 +121,7 @@ export function BookingForm({ car }: BookingFormProps) {
       <Card className="p-4 space-y-4">
         <h3 className="font-display font-semibold flex items-center gap-2">
           <CalendarDays className="w-5 h-5 text-accent" />
-          Rental Period
+          Preferred dates
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div>

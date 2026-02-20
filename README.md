@@ -1,11 +1,11 @@
-# DriveEase - Car Rental Application
+# Dacad Motors - Car Sales Platform
 
-A full-stack car rental application with React frontend and backend API.
+A full-stack car sales application with React frontend and backend API.
 
 ## Project Structure
 
 ```
-car-hire/
+dacad-motors/
 ├── frontend/          # React frontend application
 │   ├── src/          # Source code
 │   ├── public/       # Static assets
