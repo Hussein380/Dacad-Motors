@@ -115,16 +115,16 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-sm font-medium">
                 <Sparkles className="w-4 h-4" />
-                Premium Car Sales Experience
+                Kenya's Most Trusted Car Dealership
               </div>
 
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Own Your Dream,{' '}
-                <span className="text-gradient">Drive Your Passion</span>
+                Best Car Deals in Kenya{' '}
+                <span className="text-gradient">Cheap & Quality Cars</span>
               </h1>
 
               <p className="text-base sm:text-lg text-primary-foreground/80 max-w-lg">
-                Discover your next car from our curated collection of premium vehicles. We bring quality, trust, and excellence to every sale.
+                Buy cheap used cars, new cars, and certified pre-owned vehicles at the best prices. Quality SUVs, sedans & luxury cars with financing available. Kenya's most trusted car dealer since 2015.
               </p>
 
               {/* Search Form */}
@@ -245,9 +245,9 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Shield, title: 'Certified Quality', desc: 'Pre-inspected premium vehicles' },
-              { icon: Banknote, title: 'Easy Financing', desc: 'Tailored payment plans for you' },
-              { icon: Headphones, title: 'Expert Support', desc: 'Guidance through every step' },
+              { icon: Shield, title: 'Certified Quality Cars', desc: 'Best quality used & new cars inspected' },
+              { icon: Banknote, title: 'Affordable Financing', desc: 'Cheap car loans with flexible payments' },
+              { icon: Headphones, title: 'Trusted Car Experts', desc: 'Most reliable car dealer in Kenya' },
             ].map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -275,8 +275,8 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="font-display text-3xl font-bold">Browse by Category</h2>
-              <p className="text-muted-foreground mt-1">Find your dream car from our premium inventory</p>
+              <h2 className="font-display text-3xl font-bold">Browse Cheap Cars by Category</h2>
+              <p className="text-muted-foreground mt-1">Find affordable SUVs, sedans & luxury cars for sale in Kenya</p>
             </div>
           </div>
 
@@ -309,8 +309,8 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="font-display text-3xl font-bold">Featured Vehicles</h2>
-              <p className="text-muted-foreground mt-1">Our most popular picks</p>
+              <h2 className="font-display text-3xl font-bold">Best Car Deals - Featured Vehicles</h2>
+              <p className="text-muted-foreground mt-1">Most popular cheap & quality cars for sale</p>
             </div>
             <Button variant="ghost" asChild className="hidden sm:flex">
               <Link to="/cars">
@@ -409,10 +409,10 @@ export default function Home() {
             className="max-w-2xl mx-auto space-y-6"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Ready to Own Your Next Car?
+              Ready to Buy Your Perfect Car?
             </h2>
             <p className="text-primary-foreground/80">
-              Browse our exclusive collection and book a test drive today.
+              Browse the best cheap cars for sale in Kenya. Quality used & new cars with financing available. Visit Kenya's most trusted car dealership today!
             </p>
             <Button
               asChild
