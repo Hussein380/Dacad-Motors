@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Car,
   CalendarDays,
@@ -59,6 +59,9 @@ export default function Admin() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
+
+  // Inquiry message popup
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -259,12 +262,25 @@ export default function Admin() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.04 }}
                     >
-                      <Card className="overflow-hidden">
+                      <Card className={`overflow-hidden ${inquiry.status === 'New' ? 'border-l-4 border-l-warning shadow-sm shadow-warning/20' : ''}`}>
                         {/* Top stripe: car + status */}
                         <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border/50">
-                          <div className="min-w-0">
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{inquiry.type}</p>
-                            <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
+                          <div className="min-w-0 flex items-center gap-2">
+                            {inquiry.status === 'New' && (
+                              <span className="relative flex h-2 w-2 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" />
+                              </span>
+                            )}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{inquiry.type}</p>
+                                {inquiry.status === 'New' && (
+                                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-warning text-warning-foreground uppercase tracking-wider">New</span>
+                                )}
+                              </div>
+                              <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
+                            </div>
                           </div>
                           <Badge className={`${statusInfo.color} shrink-0`} variant="secondary">
                             <statusInfo.icon className="w-3 h-3 mr-1" />
@@ -290,24 +306,24 @@ export default function Admin() {
                         <div className="flex border-t border-border/50 divide-x divide-border/50">
                           <button
                             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary/60 transition-colors"
-                            onClick={() => {/* view message */ }}
+                            onClick={() => setSelectedInquiry(inquiry)}
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            View
+                            See Message
                           </button>
                           <button
                             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-success hover:bg-success/10 transition-colors"
                             onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            Mark Sold
+                            Car Sold
                           </button>
                           <button
                             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                             onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}
                           >
                             <X className="w-3.5 h-3.5" />
-                            Close
+                            Not Interested
                           </button>
                         </div>
                       </Card>
@@ -353,7 +369,8 @@ export default function Admin() {
                             key={inquiry.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="border-b border-border hover:bg-secondary/50 transition-colors"
+                            className={`border-b border-border hover:bg-secondary/50 transition-colors ${inquiry.status === 'New' ? 'border-l-4 border-l-warning bg-warning/5' : ''
+                              }`}
                           >
                             <td className="p-4">
                               <div>
@@ -383,23 +400,23 @@ export default function Admin() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setSelectedInquiry(inquiry)}>
                                     <Eye className="w-4 h-4 mr-2" />
-                                    View Message
+                                    See Customer Message
                                   </DropdownMenuItem>
                                   {inquiry.status === 'New' && (
                                     <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
                                       <MessageSquare className="w-4 h-4 mr-2" />
-                                      Mark Contacted
+                                      Mark as Contacted
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
                                     <ShieldCheck className="w-4 h-4 mr-2" />
-                                    Mark as SOLD
+                                    Car Was Sold ✓
                                   </DropdownMenuItem>
                                   <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
                                     <X className="w-4 h-4 mr-2" />
-                                    Close
+                                    Customer Not Interested
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -511,6 +528,77 @@ export default function Admin() {
           car={selectedCar}
           onSuccess={loadData}
         />
+
+        {/* Inquiry Message Popup */}
+        <AnimatePresence>
+          {selectedInquiry && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedInquiry(null)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 60 }}
+                className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-secondary/30">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{selectedInquiry.type}</p>
+                    <h3 className="font-display font-bold text-lg">{selectedInquiry.carName}</h3>
+                  </div>
+                  <button
+                    onClick={() => setSelectedInquiry(null)}
+                    className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Customer info */}
+                <div className="px-5 py-4 border-b border-border/50">
+                  <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide font-medium">Customer</p>
+                  <p className="font-semibold">{selectedInquiry.customerName}</p>
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <a href={`mailto:${selectedInquiry.email}`} className="text-sm text-accent hover:underline">{selectedInquiry.email}</a>
+                    <a href={`tel:${selectedInquiry.phone}`} className="text-sm text-muted-foreground hover:text-foreground">{selectedInquiry.phone}</a>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="px-5 py-4">
+                  <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide font-medium">Their Message</p>
+                  <p className="text-sm leading-relaxed bg-secondary/40 rounded-xl p-4 whitespace-pre-wrap">
+                    {(selectedInquiry as any).message || 'No message provided.'}
+                  </p>
+                </div>
+
+                {/* Quick reply actions */}
+                <div className="px-5 pb-5 flex gap-3">
+                  <a
+                    href={`https://wa.me/${selectedInquiry.phone?.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#25D366] text-white text-sm font-semibold hover:bg-[#20b858] transition-colors"
+                  >
+                    Reply on WhatsApp
+                  </a>
+                  <a
+                    href={`mailto:${selectedInquiry.email}`}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-sm font-semibold hover:bg-secondary transition-colors"
+                  >
+                    Reply by Email
+                  </a>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );
