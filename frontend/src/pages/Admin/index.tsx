@@ -223,13 +223,86 @@ export default function Admin() {
 
           {/* Inquiries Tab */}
           <TabsContent value="inquiries">
-            <Card>
+            {/* Mobile Card View */}
+            <div className="block md:hidden space-y-3">
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i} className="p-4">
+                    <Skeleton className="h-20 w-full" />
+                  </Card>
+                ))
+              ) : filteredInquiries.length === 0 ? (
+                <Card className="p-8 text-center text-muted-foreground">No inquiries found</Card>
+              ) : (
+                filteredInquiries.map((inquiry) => {
+                  const statusInfo = statusConfig[inquiry.status];
+                  return (
+                    <motion.div
+                      key={inquiry.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <Card className="p-4">
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">{inquiry.id}</p>
+                            <p className="font-semibold text-sm">{inquiry.carName}</p>
+                          </div>
+                          <Badge className={statusInfo.color} variant="secondary">
+                            <statusInfo.icon className="w-3 h-3 mr-1" />
+                            {statusInfo.label}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 mb-3">
+                          <p className="text-sm font-medium">{inquiry.customerName}</p>
+                          <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+                          <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">{inquiry.type}</Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Message
+                              </DropdownMenuItem>
+                              {inquiry.status === 'New' && (
+                                <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
+                                  <MessageSquare className="w-4 h-4 mr-2" />
+                                  Mark Contacted
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
+                                <ShieldCheck className="w-4 h-4 mr-2" />
+                                Mark as SOLD
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
+                                <X className="w-4 h-4 mr-2" />
+                                Close
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <Card className="hidden md:block">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
                       <th className="text-left p-4 font-medium text-muted-foreground">Inquiry</th>
-                      <th className="text-left p-4 font-medium text-muted-foreground hidden md:table-cell">Customer</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
                       <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Type</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
                       <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
@@ -239,7 +312,7 @@ export default function Admin() {
                     {isLoading ? (
                       Array.from({ length: 5 }).map((_, i) => (
                         <tr key={i} className="border-b border-border">
-                          <td className="p-4" colSpan={6}>
+                          <td className="p-4" colSpan={5}>
                             <Skeleton className="h-12 w-full" />
                           </td>
                         </tr>
@@ -261,14 +334,12 @@ export default function Admin() {
                             className="border-b border-border hover:bg-secondary/50 transition-colors"
                           >
                             <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div>
-                                  <p className="font-medium text-xs text-muted-foreground">{inquiry.id}</p>
-                                  <p className="font-medium">{inquiry.carName}</p>
-                                </div>
+                              <div>
+                                <p className="font-medium text-xs text-muted-foreground">{inquiry.id}</p>
+                                <p className="font-medium">{inquiry.carName}</p>
                               </div>
                             </td>
-                            <td className="p-4 hidden md:table-cell">
+                            <td className="p-4">
                               <p className="text-sm">{inquiry.customerName}</p>
                               <p className="text-xs text-muted-foreground">{inquiry.email}</p>
                               <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
