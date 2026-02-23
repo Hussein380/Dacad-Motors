@@ -118,6 +118,13 @@ export default function Admin() {
     }
   };
 
+  // Abbreviate large prices for compact display in stat cards
+  const shortPrice = (amount: number) => {
+    if (amount >= 1_000_000) return `KES ${(amount / 1_000_000).toFixed(1)}M`;
+    if (amount >= 1_000) return `KES ${(amount / 1_000).toFixed(0)}K`;
+    return `KES ${amount}`;
+  };
+
   const stats = [
     {
       label: 'Total Cars',
@@ -133,7 +140,7 @@ export default function Admin() {
     },
     {
       label: 'Inventory Value',
-      value: formatPrice(cars.reduce((sum, c) => sum + (c.salePrice || 0), 0)),
+      value: shortPrice(cars.reduce((sum, c) => sum + (c.salePrice || 0), 0)),
       icon: DollarSign,
       change: '+8% from last month',
     },
@@ -193,7 +200,7 @@ export default function Admin() {
                     <stat.icon className="w-5 h-5 text-accent-foreground" />
                   </div>
                 </div>
-                <p className="font-display text-2xl font-bold">{stat.value}</p>
+                <p className="font-display text-base sm:text-xl lg:text-2xl font-bold">{stat.value}</p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-xs text-success mt-1">{stat.change}</p>
               </Card>
@@ -228,65 +235,80 @@ export default function Admin() {
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <Card key={i} className="p-4">
-                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-24 w-full" />
                   </Card>
                 ))
               ) : filteredInquiries.length === 0 ? (
-                <Card className="p-8 text-center text-muted-foreground">No inquiries found</Card>
+                <Card className="p-10 text-center text-muted-foreground">
+                  <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No inquiries yet</p>
+                </Card>
               ) : (
-                filteredInquiries.map((inquiry) => {
+                filteredInquiries.map((inquiry, idx) => {
                   const statusInfo = statusConfig[inquiry.status];
+                  const initials = inquiry.customerName
+                    .split(' ')
+                    .map((n: string) => n[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
                   return (
                     <motion.div
                       key={inquiry.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.04 }}
                     >
-                      <Card className="p-4">
-                        <div className="flex items-start justify-between gap-2 mb-3">
+                      <Card className="overflow-hidden">
+                        {/* Top stripe: car + status */}
+                        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border/50">
                           <div className="min-w-0">
-                            <p className="text-xs text-muted-foreground truncate">{inquiry.id}</p>
-                            <p className="font-semibold text-sm">{inquiry.carName}</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{inquiry.type}</p>
+                            <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
                           </div>
-                          <Badge className={statusInfo.color} variant="secondary">
+                          <Badge className={`${statusInfo.color} shrink-0`} variant="secondary">
                             <statusInfo.icon className="w-3 h-3 mr-1" />
                             {statusInfo.label}
                           </Badge>
                         </div>
-                        <div className="space-y-1 mb-3">
-                          <p className="text-sm font-medium">{inquiry.customerName}</p>
-                          <p className="text-xs text-muted-foreground">{inquiry.email}</p>
-                          <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
+
+                        {/* Customer row */}
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          {/* Avatar */}
+                          <div className="w-10 h-10 rounded-full gradient-accent flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-accent-foreground">{initials}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm">{inquiry.customerName}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {inquiry.email} · {inquiry.phone}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">{inquiry.type}</Badge>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Message
-                              </DropdownMenuItem>
-                              {inquiry.status === 'New' && (
-                                <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
-                                  <MessageSquare className="w-4 h-4 mr-2" />
-                                  Mark Contacted
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
-                                <ShieldCheck className="w-4 h-4 mr-2" />
-                                Mark as SOLD
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
-                                <X className="w-4 h-4 mr-2" />
-                                Close
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+
+                        {/* Action buttons */}
+                        <div className="flex border-t border-border/50 divide-x divide-border/50">
+                          <button
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-secondary/60 transition-colors"
+                            onClick={() => {/* view message */ }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </button>
+                          <button
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-success hover:bg-success/10 transition-colors"
+                            onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            Mark Sold
+                          </button>
+                          <button
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                            onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            Close
+                          </button>
                         </div>
                       </Card>
                     </motion.div>
