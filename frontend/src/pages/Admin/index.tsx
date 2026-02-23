@@ -285,6 +285,9 @@ export default function Admin() {
                                   )}
                                 </div>
                                 <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
+                                {inquiry.carPrice && (
+                                  <p className="text-xs font-bold text-accent mt-0.5">{formatPrice(inquiry.carPrice)}</p>
+                                )}
                               </div>
                             </div>
                             <Badge className={`${statusInfo.color} shrink-0`} variant="secondary">
@@ -307,9 +310,9 @@ export default function Admin() {
                           </div>
 
                           {/* Tap indicator footer */}
-                          <div className="bg-secondary/30 px-4 py-2 flex items-center justify-between border-t border-border/50">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Tap for details</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                          <div className="bg-accent/10 px-4 py-2 flex items-center justify-between border-t border-accent/20">
+                            <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Tap for more details</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-accent" />
                           </div>
                         </Card>
                       </motion.div>
@@ -324,7 +327,7 @@ export default function Admin() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left p-4 font-medium text-muted-foreground">Inquiry</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">Inquiry Details</th>
                         <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
                         <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Type</th>
                         <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
@@ -354,13 +357,16 @@ export default function Admin() {
                               key={inquiry.id}
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className={`border-b border-border hover:bg-secondary/50 transition-colors ${inquiry.status === 'New' ? 'border-l-4 border-l-warning bg-warning/5' : ''
+                              onClick={() => setSelectedInquiry(inquiry)}
+                              className={`border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer ${inquiry.status === 'New' ? 'border-l-4 border-l-warning bg-warning/5' : ''
                                 }`}
                             >
                               <td className="p-4">
                                 <div>
-                                  <p className="font-medium text-xs text-muted-foreground">{inquiry.id}</p>
                                   <p className="font-medium">{inquiry.carName}</p>
+                                  {inquiry.carPrice && (
+                                    <p className="text-xs font-bold text-accent mt-0.5">{formatPrice(inquiry.carPrice)}</p>
+                                  )}
                                 </div>
                               </td>
                               <td className="p-4">
@@ -556,7 +562,14 @@ export default function Admin() {
                         {statusInfo.label}
                       </Badge>
                       <p className="text-white/70 text-xs font-medium uppercase tracking-wider">{selectedInquiry.type}</p>
-                      <h3 className="text-white font-display font-bold text-xl mt-0.5 leading-tight">{selectedInquiry.carName}</h3>
+                      <h3 className="text-white font-display font-bold text-xl mt-0.5 leading-tight">
+                        {selectedInquiry.carName}
+                        {selectedInquiry.carPrice && (
+                          <span className="block text-sm text-white/80 font-semibold mt-1">
+                            Asking Price: {formatPrice(selectedInquiry.carPrice)}
+                          </span>
+                        )}
+                      </h3>
                     </div>
 
                     {/* Avatar overlap */}

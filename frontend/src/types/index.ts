@@ -29,6 +29,7 @@ export interface Inquiry {
     id: string;
     carId: string;
     carName: string;
+    carPrice?: number;
     customerName: string;
     email: string;
     phone: string;

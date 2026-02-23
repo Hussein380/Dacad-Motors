@@ -40,7 +40,7 @@ exports.createInquiry = async (req, res) => {
 // @access  Private/Admin
 exports.getInquiries = async (req, res) => {
     try {
-        const inquiries = await Inquiry.find().populate('car', 'name brand model').sort('-createdAt');
+        const inquiries = await Inquiry.find().populate('car', 'name brand model salePrice').sort('-createdAt');
 
         sendSuccess(res, inquiries);
     } catch (error) {

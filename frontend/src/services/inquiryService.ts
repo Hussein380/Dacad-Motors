@@ -8,6 +8,7 @@ const mapInquiry = (i: any): Inquiry => ({
     id: i._id || i.id,
     carId: i.car?._id || i.car,
     carName: i.car?.name ? `${i.car.brand} ${i.car.name}` : 'Inquiry about Car',
+    carPrice: i.car?.salePrice,
     customerName: i.customerName,
     email: i.email,
     phone: i.phone,
