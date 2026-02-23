@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Car,
@@ -35,7 +35,7 @@ import {
 import { Layout } from '@/components/common/Layout';
 import { LazyImage } from '@/components/common/LazyImage';
 import { Skeleton } from '@/components/common/Skeleton';
-import { getCars, deleteCar } from '@/services/carService';
+import { getCars, deleteCar, updateCar } from '@/services/carService';
 import { getInquiries, updateInquiry } from '@/services/inquiryService';
 import { AdminCarModal } from '@/components/admin/AdminCarModal';
 import type { Car as CarType, Inquiry } from '@/types';
@@ -56,6 +56,8 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [carPage, setCarPage] = useState(1);
   const [carTotal, setCarTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState('inquiries');
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,10 +118,37 @@ export default function Admin() {
   };
 
   const handleUpdateInquiryStatus = async (id: string, status: Inquiry['status']) => {
+    // Find the previous inquiry to check its status before update
+    const previousInquiry = inquiries.find(i => i.id === id);
+    const wasSold = previousInquiry?.status === 'Sold';
+
     const updated = await updateInquiry(id, { status });
     if (updated) {
+      // Sync logic for car availability
+      if (status === 'Sold' && !wasSold) {
+        // Just marked as Sold: Set car unavailable
+        if (updated.carId) {
+          const formData = new FormData();
+          formData.append('available', 'false');
+          await updateCar(updated.carId, formData);
+        }
+      } else if (wasSold && status !== 'Sold') {
+        // Was Sold, now changed to something else: Restore car availability
+        if (updated.carId) {
+          const formData = new FormData();
+          formData.append('available', 'true');
+          await updateCar(updated.carId, formData);
+        }
+      }
       loadData();
     }
+  };
+
+  const scrollToInventory = () => {
+    setActiveTab('inventory');
+    setTimeout(() => {
+      tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   // Abbreviate large prices for compact display in stat cards
@@ -138,9 +167,16 @@ export default function Admin() {
     },
     {
       label: 'Sold Revenue',
-      value: shortPrice(cars.filter(c => !c.available).reduce((sum, c) => sum + (c.salePrice || 0), 0)),
+      value: (() => {
+        // Only count revenue from inquiries MARKED as Sold
+        const soldCarIds = new Set(inquiries.filter(i => i.status === 'Sold').map(i => i.carId));
+        const revenue = cars
+          .filter(c => soldCarIds.has(c.id))
+          .reduce((sum, c) => sum + (c.salePrice || 0), 0);
+        return shortPrice(revenue);
+      })(),
       icon: TrendingUp,
-      change: 'Total value of cars sold',
+      change: 'Calculated from actual sales',
     },
     {
       label: 'Inventory Value',
@@ -150,9 +186,14 @@ export default function Admin() {
     },
     {
       label: 'Potential Customers',
-      value: new Set(inquiries.map(i => i.email)).size,
+      // Only count unique customers with ACTUAL active inquiries (excludes Closed/Sold)
+      value: new Set(
+        inquiries
+          .filter(i => ['New', 'Contacted', 'Scheduled'].includes(i.status))
+          .map(i => i.email)
+      ).size,
       icon: Users,
-      change: 'Unique reach so far',
+      change: 'Active leads in pipeline',
     },
   ];
 
@@ -199,11 +240,17 @@ export default function Admin() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="p-4">
+                <Card
+                  className={`p-4 transition-all ${stat.label === 'Total Catalog' ? 'cursor-pointer hover:shadow-lg hover:bg-secondary/40 active:scale-[0.98]' : ''}`}
+                  onClick={() => stat.label === 'Total Catalog' && scrollToInventory()}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 rounded-lg gradient-accent flex items-center justify-center">
                       <stat.icon className="w-5 h-5 text-accent-foreground" />
                     </div>
+                    {stat.label === 'Total Catalog' && (
+                      <ArrowRight className="w-4 h-4 text-muted-foreground opacity-30" />
+                    )}
                   </div>
                   <p className="font-display text-base sm:text-xl lg:text-2xl font-bold">{stat.value}</p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -227,291 +274,293 @@ export default function Admin() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="inquiries" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-secondary/50 p-1 border border-border/50">
-              <TabsTrigger value="inquiries" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Inquiries</TabsTrigger>
-              <TabsTrigger value="inventory" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Inventory</TabsTrigger>
-            </TabsList>
+          <div ref={tabsRef} className="scroll-mt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-secondary/50 p-1 border border-border/50">
+                <TabsTrigger value="inquiries" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Inquiries</TabsTrigger>
+                <TabsTrigger value="inventory" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Inventory</TabsTrigger>
+              </TabsList>
 
-            {/* Inquiries Tab */}
-            <TabsContent value="inquiries">
-              {/* Mobile Card View */}
-              <div className="block md:hidden space-y-3">
-                {isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <Card key={i} className="p-4">
-                      <Skeleton className="h-24 w-full" />
+              {/* Inquiries Tab */}
+              <TabsContent value="inquiries">
+                {/* Mobile Card View */}
+                <div className="block md:hidden space-y-3">
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-24 w-full" />
+                      </Card>
+                    ))
+                  ) : filteredInquiries.length === 0 ? (
+                    <Card className="p-10 text-center text-muted-foreground">
+                      <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No inquiries yet</p>
                     </Card>
-                  ))
-                ) : filteredInquiries.length === 0 ? (
-                  <Card className="p-10 text-center text-muted-foreground">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No inquiries yet</p>
-                  </Card>
-                ) : (
-                  filteredInquiries.map((inquiry, idx) => {
-                    const statusInfo = statusConfig[inquiry.status];
-                    const initials = inquiry.customerName
-                      .split(' ')
-                      .map((n: string) => n[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase();
-                    return (
-                      <motion.div
-                        key={inquiry.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.04 }}
-                      >
-                        <Card
-                          className={`overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all ${inquiry.status === 'New' ? 'border-l-4 border-l-warning shadow-sm shadow-warning/20' : ''}`}
-                          onClick={() => setSelectedInquiry(inquiry)}
+                  ) : (
+                    filteredInquiries.map((inquiry, idx) => {
+                      const statusInfo = statusConfig[inquiry.status];
+                      const initials = inquiry.customerName
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase();
+                      return (
+                        <motion.div
+                          key={inquiry.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.04 }}
                         >
-                          {/* Top: inquiry type + status badge */}
-                          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-                            <div className="min-w-0 flex items-center gap-2">
-                              {inquiry.status === 'New' && (
-                                <span className="relative flex h-2 w-2 shrink-0">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" />
-                                </span>
-                              )}
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{inquiry.type}</p>
-                                  {inquiry.status === 'New' && (
-                                    <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-warning text-warning-foreground uppercase tracking-wider">New</span>
-                                  )}
-                                </div>
-                                <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
-                                {inquiry.carPrice && (
-                                  <p className="text-xs font-bold text-accent mt-0.5">{formatPrice(inquiry.carPrice)}</p>
+                          <Card
+                            className={`overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all ${inquiry.status === 'New' ? 'border-l-4 border-l-warning shadow-sm shadow-warning/20' : ''}`}
+                            onClick={() => setSelectedInquiry(inquiry)}
+                          >
+                            {/* Top: inquiry type + status badge */}
+                            <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                              <div className="min-w-0 flex items-center gap-2">
+                                {inquiry.status === 'New' && (
+                                  <span className="relative flex h-2 w-2 shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" />
+                                  </span>
                                 )}
-                              </div>
-                            </div>
-                            <Badge className={`${statusInfo.color} shrink-0`} variant="secondary">
-                              <statusInfo.icon className="w-3 h-3 mr-1" />
-                              {statusInfo.label}
-                            </Badge>
-                          </div>
-
-                          {/* Customer row */}
-                          <div className="flex items-center gap-3 px-4 py-3">
-                            <div className="w-10 h-10 rounded-full gradient-accent flex items-center justify-center shrink-0">
-                              <span className="text-sm font-bold text-accent-foreground">{initials}</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm text-foreground">{inquiry.customerName}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {inquiry.email} · {inquiry.phone}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Tap indicator footer */}
-                          <div className="bg-accent/10 px-4 py-2 flex items-center justify-between border-t border-accent/20">
-                            <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Tap for more details</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-accent" />
-                          </div>
-                        </Card>
-                      </motion.div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Desktop Table View */}
-              <Card className="hidden md:block">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-4 font-medium text-muted-foreground">Inquiry Details</th>
-                        <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
-                        <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Type</th>
-                        <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-                        <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {isLoading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                          <tr key={i} className="border-b border-border">
-                            <td className="p-4" colSpan={5}>
-                              <Skeleton className="h-12 w-full" />
-                            </td>
-                          </tr>
-                        ))
-                      ) : filteredInquiries.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                            No inquiries found
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredInquiries.map((inquiry) => {
-                          const statusInfo = statusConfig[inquiry.status];
-                          return (
-                            <motion.tr
-                              key={inquiry.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              onClick={() => setSelectedInquiry(inquiry)}
-                              className={`border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer ${inquiry.status === 'New' ? 'border-l-4 border-l-warning bg-warning/5' : ''
-                                }`}
-                            >
-                              <td className="p-4">
-                                <div>
-                                  <p className="font-medium">{inquiry.carName}</p>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{inquiry.type}</p>
+                                    {inquiry.status === 'New' && (
+                                      <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-warning text-warning-foreground uppercase tracking-wider">New</span>
+                                    )}
+                                  </div>
+                                  <p className="font-semibold text-sm truncate">{inquiry.carName}</p>
                                   {inquiry.carPrice && (
                                     <p className="text-xs font-bold text-accent mt-0.5">{formatPrice(inquiry.carPrice)}</p>
                                   )}
                                 </div>
-                              </td>
-                              <td className="p-4">
-                                <p className="text-sm">{inquiry.customerName}</p>
-                                <p className="text-xs text-muted-foreground">{inquiry.email}</p>
-                                <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
-                              </td>
-                              <td className="p-4 hidden lg:table-cell">
-                                <Badge variant="outline">{inquiry.type}</Badge>
-                              </td>
-                              <td className="p-4">
-                                <Badge className={statusInfo.color} variant="secondary">
-                                  <statusInfo.icon className="w-3 h-3 mr-1" />
-                                  {statusInfo.label}
-                                </Badge>
-                              </td>
-                              <td className="p-4 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <MoreHorizontal className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setSelectedInquiry(inquiry)}>
-                                      <Eye className="w-4 h-4 mr-2" />
-                                      See Customer Message
-                                    </DropdownMenuItem>
-                                    {inquiry.status === 'New' && (
-                                      <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
-                                        <MessageSquare className="w-4 h-4 mr-2" />
-                                        Mark as Contacted
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
-                                      <ShieldCheck className="w-4 h-4 mr-2" />
-                                      Car Was Sold ✓
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
-                                      <X className="w-4 h-4 mr-2" />
-                                      Customer Not Interested
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </motion.tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            </TabsContent>
+                              </div>
+                              <Badge className={`${statusInfo.color} shrink-0`} variant="secondary">
+                                <statusInfo.icon className="w-3 h-3 mr-1" />
+                                {statusInfo.label}
+                              </Badge>
+                            </div>
 
-            {/* Inventory Tab */}
-            <TabsContent value="inventory">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoading
-                  ? Array.from({ length: 6 }).map((_, i) => (
-                    <Card key={i} className="p-4">
-                      <Skeleton className="h-32 w-full mb-4" />
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </Card>
-                  ))
-                  : filteredCars.map((car, i) => (
-                    <motion.div
-                      key={car.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <Card className="overflow-hidden">
-                        <div className="relative h-40">
-                          <LazyImage
-                            src={car.imageUrl}
-                            alt={car.name}
-                            className="w-full h-full object-cover"
-                            wrapperClassName="h-full"
-                          />
-                          <div className="absolute top-2 right-2">
-                            <Badge
-                              className={
-                                car.available
-                                  ? 'bg-success text-success-foreground border-0'
-                                  : 'bg-muted text-muted-foreground'
-                              }
-                            >
-                              {car.available ? 'Available' : 'Unavailable'}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h3 className="font-display font-semibold">{car.name}</h3>
-                              <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                                <span className="capitalize">{car.category}</span>
-                                <span>•</span>
-                                <span>{car.mileage?.toLocaleString()} km</span>
-                                <span>•</span>
-                                <span>{car.condition}</span>
+                            {/* Customer row */}
+                            <div className="flex items-center gap-3 px-4 py-3">
+                              <div className="w-10 h-10 rounded-full gradient-accent flex items-center justify-center shrink-0">
+                                <span className="text-sm font-bold text-accent-foreground">{initials}</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-sm text-foreground">{inquiry.customerName}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {inquiry.email} · {inquiry.phone}
+                                </p>
                               </div>
                             </div>
-                            <p className="font-bold text-accent">{formatPrice(car.salePrice || 0)}</p>
-                          </div>
-                          <div className="flex gap-2 mt-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => handleEditCar(car)}
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteCar(car.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-              </div>
 
-              {!isLoading && cars.length < carTotal && (
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    variant="outline"
-                    onClick={loadMoreCars}
-                    disabled={isLoadingCars}
-                  >
-                    {isLoadingCars ? 'Loading...' : 'Load More Cars'}
-                  </Button>
+                            {/* Tap indicator footer */}
+                            <div className="bg-accent/10 px-4 py-2 flex items-center justify-between border-t border-accent/20">
+                              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Tap for more details</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-accent" />
+                            </div>
+                          </Card>
+                        </motion.div>
+                      );
+                    })
+                  )}
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+
+                {/* Desktop Table View */}
+                <Card className="hidden md:block">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-4 font-medium text-muted-foreground">Inquiry Details</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground hidden lg:table-cell">Type</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                          <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          Array.from({ length: 5 }).map((_, i) => (
+                            <tr key={i} className="border-b border-border">
+                              <td className="p-4" colSpan={5}>
+                                <Skeleton className="h-12 w-full" />
+                              </td>
+                            </tr>
+                          ))
+                        ) : filteredInquiries.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                              No inquiries found
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredInquiries.map((inquiry) => {
+                            const statusInfo = statusConfig[inquiry.status];
+                            return (
+                              <motion.tr
+                                key={inquiry.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                onClick={() => setSelectedInquiry(inquiry)}
+                                className={`border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer ${inquiry.status === 'New' ? 'border-l-4 border-l-warning bg-warning/5' : ''
+                                  }`}
+                              >
+                                <td className="p-4">
+                                  <div>
+                                    <p className="font-medium">{inquiry.carName}</p>
+                                    {inquiry.carPrice && (
+                                      <p className="text-xs font-bold text-accent mt-0.5">{formatPrice(inquiry.carPrice)}</p>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="p-4">
+                                  <p className="text-sm">{inquiry.customerName}</p>
+                                  <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+                                  <p className="text-xs text-muted-foreground">{inquiry.phone}</p>
+                                </td>
+                                <td className="p-4 hidden lg:table-cell">
+                                  <Badge variant="outline">{inquiry.type}</Badge>
+                                </td>
+                                <td className="p-4">
+                                  <Badge className={statusInfo.color} variant="secondary">
+                                    <statusInfo.icon className="w-3 h-3 mr-1" />
+                                    {statusInfo.label}
+                                  </Badge>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="w-4 h-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => setSelectedInquiry(inquiry)}>
+                                        <Eye className="w-4 h-4 mr-2" />
+                                        See Customer Message
+                                      </DropdownMenuItem>
+                                      {inquiry.status === 'New' && (
+                                        <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Contacted')}>
+                                          <MessageSquare className="w-4 h-4 mr-2" />
+                                          Mark as Contacted
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Sold')}>
+                                        <ShieldCheck className="w-4 h-4 mr-2" />
+                                        Car Was Sold ✓
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateInquiryStatus(inquiry.id, 'Closed')}>
+                                        <X className="w-4 h-4 mr-2" />
+                                        Customer Not Interested
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </motion.tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              {/* Inventory Tab */}
+              <TabsContent value="inventory">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {isLoading
+                    ? Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-32 w-full mb-4" />
+                        <Skeleton className="h-6 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </Card>
+                    ))
+                    : filteredCars.map((car, i) => (
+                      <motion.div
+                        key={car.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <Card className="overflow-hidden">
+                          <div className="relative h-40">
+                            <LazyImage
+                              src={car.imageUrl}
+                              alt={car.name}
+                              className="w-full h-full object-cover"
+                              wrapperClassName="h-full"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge
+                                className={
+                                  car.available
+                                    ? 'bg-success text-success-foreground border-0'
+                                    : 'bg-muted text-muted-foreground'
+                                }
+                              >
+                                {car.available ? 'Available' : 'Unavailable'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h3 className="font-display font-semibold">{car.name}</h3>
+                                <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                                  <span className="capitalize">{car.category}</span>
+                                  <span>•</span>
+                                  <span>{car.mileage?.toLocaleString()} km</span>
+                                  <span>•</span>
+                                  <span>{car.condition}</span>
+                                </div>
+                              </div>
+                              <p className="font-bold text-accent">{formatPrice(car.salePrice || 0)}</p>
+                            </div>
+                            <div className="flex gap-2 mt-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => handleEditCar(car)}
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteCar(car.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    ))}
+                </div>
+
+                {!isLoading && cars.length < carTotal && (
+                  <div className="mt-8 flex justify-center">
+                    <Button
+                      variant="outline"
+                      onClick={loadMoreCars}
+                      disabled={isLoadingCars}
+                    >
+                      {isLoadingCars ? 'Loading...' : 'Load More Cars'}
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
 
           <AdminCarModal
             isOpen={isModalOpen}
