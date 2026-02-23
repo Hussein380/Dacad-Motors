@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/index.js"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/(.*)",
@@ -12,6 +12,9 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 60
+    },
+    "api/sitemap.js": {
+      "maxDuration": 20
     }
   }
 }
