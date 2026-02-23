@@ -3,7 +3,8 @@ const {
     createInquiry,
     getInquiries,
     getInquiry,
-    updateInquiry
+    updateInquiry,
+    deleteInquiry
 } = require('../controllers/inquiries.controller');
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router
 router
     .route('/:id')
     .get(protect, restrictTo('admin', 'staff'), getInquiry)
-    .put(protect, restrictTo('admin', 'staff'), updateInquiry);
+    .put(protect, restrictTo('admin', 'staff'), updateInquiry)
+    .delete(protect, restrictTo('admin', 'staff'), deleteInquiry);
 
 module.exports = router;

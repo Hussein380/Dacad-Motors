@@ -59,3 +59,8 @@ export const updateInquiry = async (id: string, data: Partial<Inquiry>): Promise
     }
     return null;
 };
+export const deleteInquiry = async (id: string): Promise<void> => {
+    await apiRequest(`/inquiries/${id}`, {
+        method: 'DELETE'
+    });
+};

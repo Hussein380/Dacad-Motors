@@ -110,3 +110,24 @@ exports.updateInquiry = async (req, res) => {
         sendError(res, error.message, 400);
     }
 };
+
+// @desc    Delete inquiry
+// @route   DELETE /api/inquiries/:id
+// @access  Private/Admin
+exports.deleteInquiry = async (req, res) => {
+    try {
+        const inquiry = await Inquiry.findById(req.params.id);
+
+        if (!inquiry) {
+            return sendError(res, `No inquiry found with id of ${req.params.id}`, 404);
+        }
+
+        await inquiry.deleteOne();
+
+        sendSuccess(res, {}, 'Inquiry deleted successfully');
+    } catch (error) {
+        logger.error(`Inquiry deletion failed: ${error.message}`);
+        sendError(res, error.message, 500);
+    }
+};
+

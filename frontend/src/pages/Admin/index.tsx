@@ -36,7 +36,7 @@ import { Layout } from '@/components/common/Layout';
 import { LazyImage } from '@/components/common/LazyImage';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getCars, deleteCar, updateCar } from '@/services/carService';
-import { getInquiries, updateInquiry } from '@/services/inquiryService';
+import { getInquiries, updateInquiry, deleteInquiry } from '@/services/inquiryService';
 import { AdminCarModal } from '@/components/admin/AdminCarModal';
 import type { Car as CarType, Inquiry } from '@/types';
 
@@ -141,6 +141,18 @@ export default function Admin() {
         }
       }
       loadData();
+    }
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this inquiry? This action cannot be undone.')) {
+      try {
+        await deleteInquiry(id);
+        setSelectedInquiry(null);
+        loadData();
+      } catch (error: any) {
+        alert(error.message || 'Failed to delete inquiry');
+      }
     }
   };
 
@@ -685,6 +697,14 @@ export default function Admin() {
                       >
                         Reply by Email
                       </a>
+
+                      <button
+                        onClick={() => handleDeleteInquiry(selectedInquiry.id)}
+                        className="flex items-center justify-center gap-2 py-2 mt-2 text-destructive text-xs font-bold hover:bg-destructive/10 rounded-xl transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Permanently Delete Inquiry
+                      </button>
                     </div>
                   </motion.div>
                 </div>
