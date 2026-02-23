@@ -133,15 +133,33 @@ const emailTemplates = {
                 <p><span class="label">Email:</span> ${data.customerEmail}</p>
                 <p><span class="label">Phone:</span> ${data.customerPhone}</p>
                 <p><span class="label">Inquiry Type:</span> ${data.inquiryType}</p>
+                ${data.carName ? `<p><span class="label">Car:</span> ${data.carName}</p>` : ''}
                 <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
                 <p><strong>Message:</strong></p>
                 <p>${data.message}</p>
             </div>
             
             <p>Follow up with the customer as soon as possible.</p>
-            <a href="mailto:${data.customerEmail}" class="button">Reply via Email</a>
+            <a href="https://dacadmotors.com/admin" class="button">Go to Admin Dashboard</a>
         `),
-        to: 'info@dacadmotors.com'
+    }),
+    'inquiry-received': (data) => ({
+        subject: `We've received your inquiry: ${data.carName || 'Dacad Motors'}`,
+        html: baseLayout(`
+            <h1>Hi ${data.customerName},</h1>
+            <p>Thank you for reaching out to Dacad Motors! This is to confirm that we have received your inquiry regarding the <strong>${data.carName || 'car you are interested in'}</strong>.</p>
+            
+            <p>Our sales team is currently reviewing your request and will get back to you shortly via email or phone (${data.customerPhone}) to discuss the details or arrange a viewing.</p>
+
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><span class="label">Inquiry Type:</span> ${data.inquiryType}</p>
+                <p><span class="label">Reference ID:</span> #${data.inquiryId}</p>
+            </div>
+
+            <p>In the meantime, feel free to browse more of our premium collection or chat with us directly on WhatsApp for faster assistance.</p>
+            
+            <a href="${WHATSAPP_LINK}" class="whatsapp-button">Chat on WhatsApp Now</a>
+        `),
     }),
 };
 
@@ -165,6 +183,7 @@ const sendEmailDirectly = async (type, data) => {
         logger.error('No recipient for email');
         return null;
     }
+
     try {
         const result = await resend.emails.send({
             from: 'Dacad Motors <info@dacadmotors.com>',
@@ -172,7 +191,13 @@ const sendEmailDirectly = async (type, data) => {
             subject: emailContent.subject,
             html: emailContent.html,
         });
-        logger.info(`Email sent directly: ${type} -> ${recipient}`);
+
+        if (result.error) {
+            logger.error(`Resend API Error: ${result.error.message}`);
+        } else {
+            logger.info(`Email sent directly: ${type} -> ${recipient}`);
+        }
+
         return result;
     } catch (error) {
         logger.error(`Failed to send email: ${error.message}`);
