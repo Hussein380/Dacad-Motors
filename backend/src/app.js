@@ -122,7 +122,7 @@ app.get('/api/debug-cars', async (req, res) => {
 });
 
 // Dynamic Sitemap Generator
-app.get('/api/sitemap', async (req, res) => {
+app.get(['/api/sitemap', '/sitemap.xml'], async (req, res) => {
     const Car = require('./models/Car');
     try {
         const cars = await Car.find({ available: true }).select('_id updatedAt').lean();
@@ -160,7 +160,7 @@ app.get('/api/sitemap', async (req, res) => {
 
         xml += '\n</urlset>';
 
-        res.header('Content-Type', 'application/xml');
+        res.header('Content-Type', 'application/xml; charset=utf-8');
         res.status(200).send(xml);
     } catch (err) {
         logger.error(`Sitemap generation failed: ${err.message}`);
