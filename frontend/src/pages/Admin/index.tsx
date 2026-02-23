@@ -131,28 +131,28 @@ export default function Admin() {
 
   const stats = [
     {
-      label: 'Total Cars',
+      label: 'Total Catalog',
       value: carTotal,
       icon: Car,
-      change: '+2 this month',
+      change: 'Total units in database',
     },
     {
-      label: 'Active Inquiries',
-      value: inquiries.filter(i => i.status !== 'Closed' && i.status !== 'Sold').length,
-      icon: MessageSquare,
-      change: '+12 new leads',
+      label: 'Sold Revenue',
+      value: shortPrice(cars.filter(c => !c.available).reduce((sum, c) => sum + (c.salePrice || 0), 0)),
+      icon: TrendingUp,
+      change: 'Total value of cars sold',
     },
     {
       label: 'Inventory Value',
-      value: shortPrice(cars.reduce((sum, c) => sum + (c.salePrice || 0), 0)),
+      value: shortPrice(cars.filter(c => c.available).reduce((sum, c) => sum + (c.salePrice || 0), 0)),
       icon: DollarSign,
-      change: '+8% from last month',
+      change: 'Value of current stock',
     },
     {
       label: 'Potential Customers',
       value: new Set(inquiries.map(i => i.email)).size,
       icon: Users,
-      change: '+5 new customers',
+      change: 'Unique reach so far',
     },
   ];
 
