@@ -121,6 +121,54 @@ app.get('/api/debug-cars', async (req, res) => {
     }
 });
 
+// Dynamic Sitemap Generator
+app.get('/api/sitemap', async (req, res) => {
+    const Car = require('./models/Car');
+    try {
+        const cars = await Car.find({ available: true }).select('_id updatedAt').lean();
+        const baseUrl = 'https://dacadmotors.com';
+
+        const staticPages = [
+            { url: '/', priority: '1.0', freq: 'daily' },
+            { url: '/cars', priority: '0.9', freq: 'daily' },
+        ];
+
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+        // Add static pages
+        staticPages.forEach(page => {
+            xml += `
+  <url>
+    <loc>${baseUrl}${page.url}</loc>
+    <changefreq>${page.freq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`;
+        });
+
+        // Add car detail pages
+        cars.forEach(car => {
+            const lastMod = car.updatedAt ? new Date(car.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            xml += `
+  <url>
+    <loc>${baseUrl}/cars/${car._id}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+        });
+
+        xml += '\n</urlset>';
+
+        res.header('Content-Type', 'application/xml');
+        res.status(200).send(xml);
+    } catch (err) {
+        logger.error(`Sitemap generation failed: ${err.message}`);
+        res.status(500).end();
+    }
+});
+
+
 // Handle 404
 app.use((req, res) => {
     sendError(res, 'Route not found', 404);
