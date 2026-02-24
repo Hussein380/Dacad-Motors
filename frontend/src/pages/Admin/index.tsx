@@ -198,14 +198,10 @@ export default function Admin() {
     },
     {
       label: 'Potential Customers',
-      // Only count unique customers with ACTUAL active inquiries (excludes Closed/Sold)
-      value: new Set(
-        inquiries
-          .filter(i => ['New', 'Contacted', 'Scheduled'].includes(i.status))
-          .map(i => i.email)
-      ).size,
+      // Count all unique customers who ever sent an inquiry
+      value: new Set(inquiries.map(i => i.email)).size,
       icon: Users,
-      change: 'Active leads in pipeline',
+      change: 'Total unique customers enquired',
     },
   ];
 
